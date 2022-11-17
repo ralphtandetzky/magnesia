@@ -27,3 +27,4 @@
 //! Contributions for this cause are highly welcome!
 
 pub mod algebra;
+pub mod linalg;
