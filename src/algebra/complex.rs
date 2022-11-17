@@ -1,5 +1,5 @@
-use super::{AddAssignWithRef, MulWithRef, NegAssign, One, SubAssignWithRef, Zero};
-use std::ops::{Add, AddAssign, Sub, SubAssign};
+use super::{AddAssignWithRef, MulWithRef, NegAssign, One, Ring, SubAssignWithRef, Zero};
+use std::ops::{Add, AddAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
 /// Complex numbers consisting of real and imaginary part.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -177,6 +177,21 @@ impl<T: SubAssignWithRef> SubAssignWithRef for Complex<T> {
     }
 }
 
+impl<T: MulWithRef + AddAssignWithRef + SubAssignWithRef> Mul for Complex<T> {
+    type Output = Self;
+
+    fn mul(self, other: Self) -> Self::Output {
+        self.mul_with_ref(&other)
+    }
+}
+
+impl<T: MulWithRef + AddAssignWithRef + SubAssignWithRef> MulAssign for Complex<T> {
+    fn mul_assign(&mut self, rhs: Self) {
+        let prod = self.mul_with_ref(&rhs);
+        *self = prod;
+    }
+}
+
 impl<T: MulWithRef + AddAssignWithRef + SubAssignWithRef> MulWithRef for Complex<T> {
     /// Implements multiplication of complex numbers by refernce.
     ///
@@ -198,3 +213,20 @@ impl<T: MulWithRef + AddAssignWithRef + SubAssignWithRef> MulWithRef for Complex
         Complex::new(p1, p2)
     }
 }
+
+impl<T: Neg<Output = T>> Neg for Complex<T> {
+    type Output = Self;
+
+    fn neg(self) -> Self {
+        Self::new(-self.re, -self.im)
+    }
+}
+
+impl<T: NegAssign> NegAssign for Complex<T> {
+    fn neg_assign(&mut self) {
+        self.re.neg_assign();
+        self.im.neg_assign();
+    }
+}
+
+impl<T: Ring> Ring for Complex<T> {}

@@ -94,16 +94,16 @@ pub trait Ring:
     Clone
     + Zero
     + One
-    + Add
+    + Add<Output = Self>
     + AddAssign
     + AddAssignWithRef
-    + Sub
+    + Sub<Output = Self>
     + SubAssign
     + SubAssignWithRef
-    + Mul
+    + Mul<Output = Self>
     + MulAssign
     + MulWithRef
-    + Neg
+    + Neg<Output = Self>
     + NegAssign
     + PartialEq
 {
