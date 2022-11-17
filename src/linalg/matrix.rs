@@ -427,7 +427,7 @@ impl<'a, 'b, T: Zero + MulWithRef + AddAssignWithRef, const M: usize, const N: u
     /// assert_eq!(v, SVector::from([1*1 + 2*2, 1*3 + 2*4]));
     /// ```
     fn mul(self, vec: &'b SVector<T, N>) -> Self::Output {
-        let mut i = 0 as usize;
+        let mut i = 0_usize;
         SVector::from([(); M].map(|_| {
             let mut sum = T::zero();
             for (m, v) in self.0[i].iter().zip(vec) {
