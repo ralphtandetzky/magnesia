@@ -1,5 +1,5 @@
-use crate::algebra::{AddAssignWithRef, MulWithRef, One, SubAssignWithRef, Zero};
-use std::ops::{Add, AddAssign, Mul, Sub, SubAssign};
+use crate::algebra::{AddAssignWithRef, MulWithRef, NegAssign, One, Ring, SubAssignWithRef, Zero};
+use std::ops::{Add, AddAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
 trait Dimension {}
 
@@ -163,6 +163,34 @@ impl<T: AddAssignWithRef, const NUM_ROWS: usize, const NUM_COLS: usize> AddAssig
     }
 }
 
+impl<T: AddAssignWithRef, const NUM_ROWS: usize, const NUM_COLS: usize> AddAssignWithRef
+    for SMatrix<T, NUM_ROWS, NUM_COLS>
+{
+    /// Adds two matrices in-place.
+    ///
+    /// It is recommended to use the operator syntax instead:
+    /// ```
+    /// # use magnesia::linalg::SMatrix;
+    /// let mut a = SMatrix::from([[0,1,2],[3,4,5]]);
+    /// let b = SMatrix::from([[1,1,1],[1,1,1]]);
+    /// a += &b;
+    /// assert_eq!(a, SMatrix::from([[1,2,3],[4,5,6]]));
+    /// ```
+    ///
+    /// # Example
+    /// ```
+    /// # use magnesia::linalg::SMatrix;
+    /// # use magnesia::algebra::AddAssignWithRef;
+    /// let mut a = SMatrix::from([[0,1,2],[3,4,5]]);
+    /// let b = SMatrix::from([[1,1,1],[1,1,1]]);
+    /// a.add_assign_with_ref(&b);
+    /// assert_eq!(a, SMatrix::from([[1,2,3],[4,5,6]]));
+    /// ```
+    fn add_assign_with_ref(&mut self, other: &Self) {
+        *self += other;
+    }
+}
+
 impl<T: SubAssignWithRef, const NUM_ROWS: usize, const NUM_COLS: usize> Sub
     for SMatrix<T, NUM_ROWS, NUM_COLS>
 {
@@ -245,8 +273,36 @@ impl<T: SubAssignWithRef, const NUM_ROWS: usize, const NUM_COLS: usize> SubAssig
     }
 }
 
-impl<'a, 'b, T: AddAssign + MulWithRef + Zero, const L: usize, const M: usize, const N: usize>
-    Mul<&'a SMatrix<T, M, N>> for &'b SMatrix<T, L, M>
+impl<T: SubAssignWithRef, const NUM_ROWS: usize, const NUM_COLS: usize> SubAssignWithRef
+    for SMatrix<T, NUM_ROWS, NUM_COLS>
+{
+    /// Subtracts two matrices in-place.
+    ///
+    /// It is recommended to use the operator syntax instead:
+    /// ```
+    /// # use magnesia::linalg::SMatrix;
+    /// let mut a = SMatrix::from([[1,2,3],[4,5,6]]);
+    /// let b = SMatrix::from([[1,1,1],[1,1,1]]);
+    /// a -= &b;
+    /// assert_eq!(a, SMatrix::from([[0,1,2],[3,4,5]]));
+    /// ```
+    ///
+    /// # Example
+    /// ```
+    /// # use magnesia::linalg::SMatrix;
+    /// # use magnesia::algebra::SubAssignWithRef;
+    /// let mut a = SMatrix::from([[1,2,3],[4,5,6]]);
+    /// let b = SMatrix::from([[1,1,1],[1,1,1]]);
+    /// a.sub_assign_with_ref(&b);
+    /// assert_eq!(a, SMatrix::from([[0,1,2],[3,4,5]]));
+    /// ```
+    fn sub_assign_with_ref(&mut self, other: &Self) {
+        *self -= other;
+    }
+}
+
+impl<'a, T: AddAssign + MulWithRef + Zero, const L: usize, const M: usize, const N: usize>
+    Mul<&'a SMatrix<T, M, N>> for &'a SMatrix<T, L, M>
 {
     type Output = SMatrix<T, L, N>;
 
@@ -255,10 +311,10 @@ impl<'a, 'b, T: AddAssign + MulWithRef + Zero, const L: usize, const M: usize, c
     /// # Example
     /// ```
     /// # use magnesia::linalg::SMatrix;
-    /// let a = SMatrix::from([[1,2,3],[4,5,6]]);
-    /// let b = SMatrix::from([[1,2],[3,4],[5,6]]);
+    /// let a = SMatrix::from([[0,1,2],[3,4,5]]);
+    /// let b = SMatrix::from([[0,1],[2,3],[4,5]]);
     /// let c = &a * &b;
-    /// assert_eq!(c, SMatrix::from([[22,28],[49,64]]));
+    /// assert_eq!(c, SMatrix::from([[10,13],[28,40]]));
     /// ```
     fn mul(self, other: &'a SMatrix<T, M, N>) -> Self::Output {
         let mut l: usize = 0;
@@ -279,3 +335,120 @@ impl<'a, 'b, T: AddAssign + MulWithRef + Zero, const L: usize, const M: usize, c
         }
     }
 }
+
+impl<T: AddAssign + MulWithRef + Zero, const L: usize, const M: usize, const N: usize>
+    Mul<SMatrix<T, M, N>> for SMatrix<T, L, M>
+{
+    type Output = SMatrix<T, L, N>;
+
+    /// Multiplies two matrices
+    ///
+    /// # Example
+    /// ```
+    /// # use magnesia::linalg::SMatrix;
+    /// let a = SMatrix::from([[0,1,2],[3,4,5]]);
+    /// let b = SMatrix::from([[0,1],[2,3],[4,5]]);
+    /// let c = a * b;
+    /// assert_eq!(c, SMatrix::from([[10,13],[28,40]]));
+    /// ```
+    fn mul(self, other: SMatrix<T, M, N>) -> Self::Output {
+        &self * &other
+    }
+}
+
+impl<T, const M: usize, const N: usize> MulAssign<&SMatrix<T, N, N>> for SMatrix<T, M, N>
+where
+    for<'a> &'a Self: Mul<&'a SMatrix<T, N, N>, Output = Self>,
+{
+    /// Multiplies two matrices
+    ///
+    /// # Example
+    /// ```
+    /// # use magnesia::linalg::SMatrix;
+    /// let mut a = SMatrix::from([[0,1],[2,3],[4,5]]);
+    /// let b = SMatrix::from([[4,5],[6,7]]);
+    /// a *= &b;
+    /// assert_eq!(a, SMatrix::from([[6,7],[26,31],[46,55]]));
+    /// ```
+    fn mul_assign(&mut self, other: &SMatrix<T, N, N>) {
+        let r: &Self = self;
+        let result = r * other;
+        *self = result;
+    }
+}
+
+impl<T, const M: usize, const N: usize> MulAssign<SMatrix<T, N, N>> for SMatrix<T, M, N>
+where
+    for<'a> &'a Self: Mul<&'a SMatrix<T, N, N>, Output = Self>,
+{
+    /// Multiplies two matrices and assigns the result to the first operand.
+    ///
+    /// # Example
+    /// ```
+    /// # use magnesia::linalg::SMatrix;
+    /// let mut a = SMatrix::from([[0,1],[2,3],[4,5]]);
+    /// let b = SMatrix::from([[4,5],[6,7]]);
+    /// a *= b;
+    /// assert_eq!(a, SMatrix::from([[6,7],[26,31],[46,55]]));
+    /// ```
+    fn mul_assign(&mut self, other: SMatrix<T, N, N>) {
+        let r: &Self = self;
+        let result = r * &other;
+        *self = result;
+    }
+}
+
+impl<T: AddAssign + MulWithRef + Zero, const N: usize> MulWithRef for SMatrix<T, N, N> {
+    /// Multiplies two matrices
+    ///
+    /// # Example
+    /// ```
+    /// # use magnesia::linalg::SMatrix;
+    /// # use magnesia::algebra::MulWithRef;
+    /// let a = SMatrix::from([[0,1],[2,3]]);
+    /// let b = SMatrix::from([[1,2],[3,4]]);
+    /// let c = a.mul_with_ref(&b);
+    /// assert_eq!(c, SMatrix::from([[3,4],[11,16]]));
+    /// ```
+    fn mul_with_ref(&self, other: &Self) -> Self {
+        self * other
+    }
+}
+
+impl<T: NegAssign, const M: usize, const N: usize> NegAssign for SMatrix<T, M, N> {
+    /// Negates a matrix in-place.
+    ///
+    /// # Example
+    /// ```
+    /// # use magnesia::linalg::SMatrix;
+    /// # use magnesia::algebra::NegAssign;
+    /// let mut m = SMatrix::from([[1,2,3],[4,5,6]]);
+    /// m.neg_assign();
+    /// assert_eq!(m, SMatrix::from([[-1,-2,-3],[-4,-5,-6]]));
+    fn neg_assign(&mut self) {
+        for row in self.0.iter_mut() {
+            for val in row.iter_mut() {
+                val.neg_assign();
+            }
+        }
+    }
+}
+
+impl<T: NegAssign, const M: usize, const N: usize> Neg for SMatrix<T, M, N> {
+    type Output = Self;
+
+    /// Implements the unary `-` operator.
+    ///
+    /// # Example
+    /// ```
+    /// # use magnesia::linalg::SMatrix;
+    /// let a = SMatrix::from([[1,2,3],[4,5,6]]);
+    /// let b = -a;
+    /// assert_eq!(b, SMatrix::from([[-1,-2,-3],[-4,-5,-6]]));
+    fn neg(mut self) -> Self {
+        self.neg_assign();
+        self
+    }
+}
+
+impl<T: Ring, const N: usize> Ring for SMatrix<T, N, N> {}

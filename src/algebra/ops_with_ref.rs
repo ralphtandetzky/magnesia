@@ -10,12 +10,6 @@ pub trait AddAssignWithRef {
     fn add_assign_with_ref(&mut self, rhs: &Self);
 }
 
-impl<T: AddAssign<T> + Copy> AddAssignWithRef for T {
-    fn add_assign_with_ref(&mut self, rhs: &Self) {
-        *self += *rhs;
-    }
-}
-
 /// This trait allows zero overhead implementation of the `-=` operator by
 /// taking operands by reference.
 ///
@@ -24,15 +18,6 @@ impl<T: AddAssign<T> + Copy> AddAssignWithRef for T {
 pub trait SubAssignWithRef {
     /// Subtracts `*rhs` from `self` in-place.
     fn sub_assign_with_ref(&mut self, rhs: &Self);
-}
-
-impl<T: SubAssign<T> + Clone> SubAssignWithRef for T
-where
-    T: Copy,
-{
-    fn sub_assign_with_ref(&mut self, rhs: &Self) {
-        *self -= *rhs;
-    }
 }
 
 /// This trait allows zero overhead implementation of the `+=` operator by
@@ -45,12 +30,6 @@ pub trait MulWithRef {
     fn mul_with_ref(&self, rhs: &Self) -> Self;
 }
 
-impl<T: Mul<T, Output = Self> + Copy> MulWithRef for T {
-    fn mul_with_ref(&self, rhs: &Self) -> Self {
-        *self * *rhs
-    }
-}
-
 /// This trait allows zero overhead implementation of the unary `-` operator
 /// by taking its operand by mutable reference.
 ///
@@ -61,11 +40,40 @@ pub trait NegAssign {
     fn neg_assign(&mut self);
 }
 
-impl<T: Neg<Output = T> + Clone> NegAssign for T
-where
-    T: Copy,
+trait AutoImplementRingOpsWithRef:
+    Copy + AddAssign<Self> + SubAssign<Self> + Mul<Self, Output = Self> + Neg<Output = Self>
 {
+}
+
+impl<T: AutoImplementRingOpsWithRef> AddAssignWithRef for T {
+    fn add_assign_with_ref(&mut self, rhs: &Self) {
+        *self += *rhs;
+    }
+}
+
+impl<T: AutoImplementRingOpsWithRef> SubAssignWithRef for T {
+    fn sub_assign_with_ref(&mut self, rhs: &Self) {
+        *self -= *rhs;
+    }
+}
+
+impl<T: AutoImplementRingOpsWithRef> MulWithRef for T {
+    fn mul_with_ref(&self, rhs: &Self) -> Self {
+        *self * *rhs
+    }
+}
+
+impl<T: AutoImplementRingOpsWithRef> NegAssign for T {
     fn neg_assign(&mut self) {
         *self = -*self;
     }
 }
+
+impl AutoImplementRingOpsWithRef for i8 {}
+impl AutoImplementRingOpsWithRef for i16 {}
+impl AutoImplementRingOpsWithRef for i32 {}
+impl AutoImplementRingOpsWithRef for i64 {}
+impl AutoImplementRingOpsWithRef for i128 {}
+impl AutoImplementRingOpsWithRef for isize {}
+impl AutoImplementRingOpsWithRef for f32 {}
+impl AutoImplementRingOpsWithRef for f64 {}
