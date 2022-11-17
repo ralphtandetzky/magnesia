@@ -180,12 +180,30 @@ impl<T: SubAssignWithRef> SubAssignWithRef for Complex<T> {
 impl<T: MulWithRef + AddAssignWithRef + SubAssignWithRef> Mul for Complex<T> {
     type Output = Self;
 
+    /// Implements the `*` operator for complex numbers.
+    ///
+    /// # Example
+    /// ```
+    /// # use magnesia::algebra::Complex;
+    /// let a = Complex::new(1, 2);
+    /// let b = a * a;
+    /// assert_eq!(b, Complex::new(-3, 4));
+    /// ```
     fn mul(self, other: Self) -> Self::Output {
         self.mul_with_ref(&other)
     }
 }
 
 impl<T: MulWithRef + AddAssignWithRef + SubAssignWithRef> MulAssign for Complex<T> {
+    /// Implements the `*=` operator for complex numbers.
+    ///
+    /// # Example
+    /// ```
+    /// # use magnesia::algebra::Complex;
+    /// let mut a = Complex::new(1, 2);
+    /// a *= a;
+    /// assert_eq!(a, Complex::new(-3, 4));
+    /// ```
     fn mul_assign(&mut self, rhs: Self) {
         let prod = self.mul_with_ref(&rhs);
         *self = prod;
@@ -217,12 +235,31 @@ impl<T: MulWithRef + AddAssignWithRef + SubAssignWithRef> MulWithRef for Complex
 impl<T: Neg<Output = T>> Neg for Complex<T> {
     type Output = Self;
 
+    /// Implements the unary `-` operator for complex numbers.
+    ///
+    /// # Example
+    /// ```
+    /// # use magnesia::algebra::Complex;
+    /// let a = Complex::new(1, 2);
+    /// let b = -a;
+    /// assert_eq!(b, Complex::new(-1, -2));
+    /// ```
     fn neg(self) -> Self {
         Self::new(-self.re, -self.im)
     }
 }
 
 impl<T: NegAssign> NegAssign for Complex<T> {
+    /// Implements the NegAssign trait for complex numbers.
+    ///
+    /// # Example
+    /// ```
+    /// # use magnesia::algebra::Complex;
+    /// # use magnesia::algebra::NegAssign;
+    /// let mut a = Complex::new(1, 2);
+    /// a.neg_assign();
+    /// assert_eq!(a, Complex::new(-1, -2));
+    /// ```
     fn neg_assign(&mut self) {
         self.re.neg_assign();
         self.im.neg_assign();
