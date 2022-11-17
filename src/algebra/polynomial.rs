@@ -12,7 +12,7 @@ let p = Polynomial::from_coefficients(vec![1, 2, 3]); // p(x) = 1 + 2*x + 3*x^2
 assert_eq!(p.eval(2), 1 + 2*2 + 3*4);
 ```
 */
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Polynomial<T: Ring> {
     a: Vec<T>,
 }
