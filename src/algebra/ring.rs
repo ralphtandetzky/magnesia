@@ -18,6 +18,12 @@ impl<T: From<i8>> Zero for T {
     }
 }
 
+#[test]
+fn test_zero_for_i64() {
+    let z = i64::zero();
+    assert_eq!(z, 0);
+}
+
 /// Trait providing a one element of a multiplicative algebraic structure
 /// (like a group or a ring or a field).
 pub trait One {
@@ -29,6 +35,12 @@ impl<T: From<i8>> One for T {
     fn one() -> Self {
         Self::from(1)
     }
+}
+
+#[test]
+fn test_one_for_f32() {
+    let z = f32::one();
+    assert_eq!(z, 1.0);
 }
 
 /// Trait for data structures which model an

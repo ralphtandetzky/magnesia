@@ -21,6 +21,14 @@ where
     }
 }
 
+#[test]
+fn test_mul_refs_for_u16() {
+    let a = 19u16;
+    let b = 13u16;
+    let c = a.mul_refs(&b);
+    assert_eq!(c, a * b)
+}
+
 /// This trait tells that the implementing type `T` provides a division
 /// operator taking `&T` and `&T` as arguments.
 ///
@@ -40,4 +48,12 @@ where
     fn div_refs(&self, rhs: &Self) -> Self {
         self / rhs
     }
+}
+
+#[test]
+fn test_div_refs_for_f64() {
+    let a = 19.12f64;
+    let b = -5.234f64;
+    let c = a.div_refs(&b);
+    assert_eq!(c, a / b)
 }

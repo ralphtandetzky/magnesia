@@ -19,3 +19,11 @@ pub trait Conj {
 #[rustfmt::skip] impl Conj for u128 { fn conj(self) -> Self { self } }
 #[rustfmt::skip] impl Conj for f32  { fn conj(self) -> Self { self } }
 #[rustfmt::skip] impl Conj for f64  { fn conj(self) -> Self { self } }
+
+#[test]
+fn test_conj_for_i16() {
+    let a = -5i16;
+    let b = a.conj();
+    assert_eq!(a, b); // i16 represents real values. Therefore, their complex
+                      // conjugate should be the input.
+}

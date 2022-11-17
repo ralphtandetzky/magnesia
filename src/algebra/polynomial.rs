@@ -70,48 +70,32 @@ impl<T: Ring> Polynomial<T> {
 }
 
 impl<T: Ring> Zero for Polynomial<T> {
-    /// Creates a zero polynomial.
-    ///
-    /// # Example
-    /// ```
-    /// # use magnesia::algebra::Polynomial;
-    /// # use magnesia::algebra::Zero;
-    /// let p = Polynomial::zero();
-    /// assert_eq!(p.eval(5), 0);
-    /// ```
     fn zero() -> Self {
         Polynomial { a: Vec::new() }
     }
 }
 
+#[test]
+fn test_zero_polynomial_for_ints() {
+    let p = Polynomial::zero();
+    assert_eq!(p.eval(5), 0);
+}
+
 impl<T: Ring> One for Polynomial<T> {
-    /// Creates a zero polynomial.
-    ///
-    /// # Example
-    /// ```
-    /// # use magnesia::algebra::Polynomial;
-    /// # use magnesia::algebra::One;
-    /// let p = Polynomial::one();
-    /// assert_eq!(p.eval(5), 1);
-    /// ```
     fn one() -> Self {
         Polynomial { a: vec![T::one()] }
     }
 }
 
+#[test]
+fn test_one_polynomial_for_ints() {
+    let p = Polynomial::one();
+    assert_eq!(p.eval(5), 1);
+}
+
 impl<T: Ring> std::ops::Add<Polynomial<T>> for Polynomial<T> {
     type Output = Self;
 
-    /// Adds two polynomials.
-    ///
-    /// # Example
-    /// ```
-    /// # use magnesia::algebra::Polynomial;
-    /// let p = Polynomial::from_coefficients(vec![1, 2, 3]);
-    /// let q = Polynomial::from_coefficients(vec![2, 3, 4]);
-    /// let r = p + q;
-    /// assert_eq!(r, Polynomial::from_coefficients(vec![3, 5, 7]));
-    /// ```
     fn add(mut self, rhs: Polynomial<T>) -> Self {
         if self.a.len() < rhs.a.len() {
             rhs.add(self)
@@ -124,17 +108,15 @@ impl<T: Ring> std::ops::Add<Polynomial<T>> for Polynomial<T> {
     }
 }
 
+#[test]
+fn test_add_polynomials_for_ints() {
+    let p = Polynomial::from_coefficients(vec![1, 2, 3]);
+    let q = Polynomial::from_coefficients(vec![2, 3, 4]);
+    let r = p + q;
+    assert_eq!(r, Polynomial::from_coefficients(vec![3, 5, 7]));
+}
+
 impl<T: Ring> std::ops::AddAssign for Polynomial<T> {
-    /// The addition assignment operator `+=`.
-    ///
-    /// # Example
-    /// ```
-    /// # use magnesia::algebra::Polynomial;
-    /// let mut p = Polynomial::from_coefficients(vec![1, 2, 3]);
-    /// let q = Polynomial::from_coefficients(vec![2, 3, 4]);
-    /// p += q;
-    /// assert_eq!(p, Polynomial::from_coefficients(vec![3, 5, 7]));
-    /// ```
     fn add_assign(&mut self, rhs: Self) {
         let my_len = self.a.len();
         if self.a.len() < rhs.a.len() {
@@ -150,17 +132,15 @@ impl<T: Ring> std::ops::AddAssign for Polynomial<T> {
     }
 }
 
+#[test]
+fn test_add_assign_for_polynomials_of_ints() {
+    let mut p = Polynomial::from_coefficients(vec![1, 2, 3]);
+    let q = Polynomial::from_coefficients(vec![2, 3, 4]);
+    p += q;
+    assert_eq!(p, Polynomial::from_coefficients(vec![3, 5, 7]));
+}
+
 impl<T: Ring> AddAssign<&Polynomial<T>> for Polynomial<T> {
-    /// An add assignment operator with references on both sides.
-    ///
-    /// # Example
-    /// ```
-    /// # use magnesia::algebra::Polynomial;
-    /// let mut p = Polynomial::from_coefficients(vec![1, 2, 3]);
-    /// let q = Polynomial::from_coefficients(vec![2, 3, 4]);
-    /// p += &q;
-    /// assert_eq!(p, Polynomial::from_coefficients(vec![3, 5, 7]));
-    /// ```
     fn add_assign(&mut self, rhs: &Self) {
         if self.a.len() < rhs.a.len() {
             self.a.resize_with(rhs.a.len(), || T::zero());
@@ -171,51 +151,45 @@ impl<T: Ring> AddAssign<&Polynomial<T>> for Polynomial<T> {
     }
 }
 
+#[test]
+fn test_add_assign_for_ref_polynomials_of_ints() {
+    let mut p = Polynomial::from_coefficients(vec![1, 2, 3]);
+    let q = Polynomial::from_coefficients(vec![2, 3, 4]);
+    p += &q;
+    assert_eq!(p, Polynomial::from_coefficients(vec![3, 5, 7]));
+}
+
 impl<T: Ring> std::ops::Sub for Polynomial<T> {
     type Output = Self;
 
-    /// Subtracts two polynomials.
-    ///
-    /// # Example
-    /// ```
-    /// # use magnesia::algebra::Polynomial;
-    /// let p = Polynomial::from_coefficients(vec![1, 2, 3]);
-    /// let q = Polynomial::from_coefficients(vec![2, 3, 5]);
-    /// let r = p - q;
-    /// assert_eq!(r, Polynomial::from_coefficients(vec![-1, -1, -2]));
-    /// ```
     fn sub(self, rhs: Self) -> Self {
         self + -rhs
     }
 }
 
+#[test]
+fn test_sub_for_polynomials_of_int() {
+    let p = Polynomial::from_coefficients(vec![1, 2, 3]);
+    let q = Polynomial::from_coefficients(vec![2, 3, 5]);
+    let r = p - q;
+    assert_eq!(r, Polynomial::from_coefficients(vec![-1, -1, -2]));
+}
+
 impl<T: Ring> std::ops::SubAssign for Polynomial<T> {
-    /// Implements the `-=` operator.
-    ///
-    /// # Example
-    /// ```
-    /// # use magnesia::algebra::Polynomial;
-    /// let mut p = Polynomial::from_coefficients(vec![1, 2, 3]);
-    /// let q = Polynomial::from_coefficients(vec![2, 3, 5]);
-    /// p -= q;
-    /// assert_eq!(p, Polynomial::from_coefficients(vec![-1, -1, -2]));
-    /// ```
     fn sub_assign(&mut self, rhs: Self) {
         *self += -rhs
     }
 }
 
+#[test]
+fn test_sub_assign_for_polynomials_of_ints() {
+    let mut p = Polynomial::from_coefficients(vec![1, 2, 3]);
+    let q = Polynomial::from_coefficients(vec![2, 3, 5]);
+    p -= q;
+    assert_eq!(p, Polynomial::from_coefficients(vec![-1, -1, -2]));
+}
+
 impl<T: Ring> SubAssign<&Polynomial<T>> for Polynomial<T> {
-    /// Implements the `-=` operator for polynomials.
-    ///
-    /// # Example
-    /// ```
-    /// # use magnesia::algebra::Polynomial;
-    /// let mut p = Polynomial::from_coefficients(vec![1, 2, 3]);
-    /// let q = Polynomial::from_coefficients(vec![2, 3, 5]);
-    /// p -= &q;
-    /// assert_eq!(p, Polynomial::from_coefficients(vec![-1, -1, -2]));
-    /// ```
     fn sub_assign(&mut self, rhs: &Self) {
         if self.a.len() < rhs.a.len() {
             self.a.resize_with(rhs.a.len(), || T::zero());
@@ -226,59 +200,51 @@ impl<T: Ring> SubAssign<&Polynomial<T>> for Polynomial<T> {
     }
 }
 
+#[test]
+fn test_sub_assign_for_ref_polynomials_of_ints() {
+    let mut p = Polynomial::from_coefficients(vec![1, 2, 3]);
+    let q = Polynomial::from_coefficients(vec![2, 3, 5]);
+    p -= &q;
+    assert_eq!(p, Polynomial::from_coefficients(vec![-1, -1, -2]));
+}
+
 impl<T: Ring> std::ops::Mul for Polynomial<T> {
     type Output = Self;
 
-    /// Implements the `*` operator for multiplying two polynomials.
-    ///
-    /// # Example
-    /// ```
-    /// # use magnesia::algebra::Polynomial;
-    /// // p(x) = 1 + 2*x + 3*x^2
-    /// // q(x) = x
-    /// let p = Polynomial::from_coefficients(vec![1, 2, 3]);
-    /// let q = Polynomial::from_coefficients(vec![0, 1]);
-    /// let r = p * q;
-    /// assert_eq!(r, Polynomial::from_coefficients(vec![0, 1, 2, 3]));
-    /// ```
     fn mul(self, rhs: Self) -> Self {
         self.mul_refs(&rhs)
     }
 }
 
+#[test]
+fn test_mul_for_polynomials_of_ints() {
+    // p(x) = 1 + 2*x + 3*x^2
+    // q(x) = x
+    let p = Polynomial::from_coefficients(vec![1, 2, 3]);
+    let q = Polynomial::from_coefficients(vec![0, 1]);
+    let r = p * q;
+    assert_eq!(r, Polynomial::from_coefficients(vec![0, 1, 2, 3]));
+}
+
 impl<T: Ring> std::ops::MulAssign for Polynomial<T> {
-    /// Implements the `*=` operator for multiplying two polynomials.
-    ///
-    /// # Example
-    /// ```
-    /// # use magnesia::algebra::Polynomial;
-    /// // p(x) = 1 + 2*x + 3*x^2
-    /// // q(x) = x
-    /// let mut p = Polynomial::from_coefficients(vec![1, 2, 3]);
-    /// let q = Polynomial::from_coefficients(vec![0, 1]);
-    /// p *= q;
-    /// assert_eq!(p, Polynomial::from_coefficients(vec![0, 1, 2, 3]));
-    /// ```
     fn mul_assign(&mut self, rhs: Self) {
         *self = self.mul_refs(&rhs);
     }
 }
 
+#[test]
+fn test_mul_assign_for_polynomials_of_ints() {
+    // p(x) = 1 + 2*x + 3*x^2
+    // q(x) = x
+    let mut p = Polynomial::from_coefficients(vec![1, 2, 3]);
+    let q = Polynomial::from_coefficients(vec![0, 1]);
+    p *= q;
+    assert_eq!(p, Polynomial::from_coefficients(vec![0, 1, 2, 3]));
+}
+
 impl<T: Ring> Mul for &Polynomial<T> {
     type Output = Polynomial<T>;
-    /// A multiply operator with references on both sides.
-    ///
-    /// # Example
-    /// ```
-    /// # use magnesia::algebra::Polynomial;
-    /// # use magnesia::algebra::MulRefs;
-    /// // p(x) = 1 + 2*x + 3*x^2
-    /// // q(x) = x
-    /// let p = Polynomial::from_coefficients(vec![1, 2, 3]);
-    /// let q = Polynomial::from_coefficients(vec![0, 1]);
-    /// let r = &p * &q;
-    /// assert_eq!(r, Polynomial::from_coefficients(vec![0, 1, 2, 3]));
-    /// ```
+
     fn mul(self, rhs: Self) -> Polynomial<T> {
         if self.a.is_empty() || rhs.a.is_empty() {
             return <Polynomial<T>>::zero();
@@ -294,23 +260,31 @@ impl<T: Ring> Mul for &Polynomial<T> {
     }
 }
 
+#[test]
+fn test_mul_for_ref_polynomials_of_ints() {
+    // p(x) = 1 + 2*x + 3*x^2
+    // q(x) = x
+    let p = Polynomial::from_coefficients(vec![1, 2, 3]);
+    let q = Polynomial::from_coefficients(vec![0, 1]);
+    let r = &p * &q;
+    assert_eq!(r, Polynomial::from_coefficients(vec![0, 1, 2, 3]));
+}
+
 impl<T: Ring> std::ops::Neg for Polynomial<T> {
     type Output = Self;
 
-    /// Implements the unary `-` operator.
-    ///
-    /// # Example
-    /// ```
-    /// use magnesia::algebra::Polynomial;
-    /// let p = Polynomial::from_coefficients(vec![1, 2, 3]);
-    /// let q = -p;
-    /// assert_eq!(q, Polynomial::from_coefficients(vec![-1, -2, -3]));
-    /// ```
     fn neg(self) -> Self {
         Self {
             a: self.a.into_iter().map(|x| -x).collect(),
         }
     }
+}
+
+#[test]
+fn test_neg_for_polynomials_of_ints() {
+    let p = Polynomial::from_coefficients(vec![1, 2, 3]);
+    let q = -p;
+    assert_eq!(q, Polynomial::from_coefficients(vec![-1, -2, -3]));
 }
 
 impl<T: Ring> Ring for Polynomial<T> {}
