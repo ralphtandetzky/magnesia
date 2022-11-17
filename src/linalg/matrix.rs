@@ -49,9 +49,9 @@ impl<T: Zero + One, const NUM_ROWS: usize, const NUM_COLS: usize> One
     /// assert_eq!(m, SMatrix::from([[1,0],[0,1],[0,0]]));
     /// ```
     fn one() -> Self {
-        let mut m: usize = 0;
+        let mut m = 0_usize;
         Self([(); NUM_ROWS].map(|_| {
-            let mut n: usize = 0;
+            let mut n = 0_usize;
             let row = [(); NUM_COLS].map(|_| {
                 let x = if m == n { T::one() } else { T::zero() };
                 n += 1;
@@ -314,9 +314,9 @@ impl<'a, T: AddAssign + MulWithRef + Zero, const L: usize, const M: usize, const
     /// assert_eq!(c, SMatrix::from([[10,13],[28,40]]));
     /// ```
     fn mul(self, other: &'a SMatrix<T, M, N>) -> Self::Output {
-        let mut l: usize = 0;
+        let mut l = 0_usize;
         SMatrix([(); L].map(|_| {
-            let mut n: usize = 0;
+            let mut n = 0_usize;
             let row = [(); N].map(|_| {
                 let mut sum = T::zero();
                 for m in 0..M {
