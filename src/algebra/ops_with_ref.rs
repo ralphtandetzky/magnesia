@@ -110,5 +110,11 @@ impl AutoImplementOpsWithRef for i32 {}
 impl AutoImplementOpsWithRef for i64 {}
 impl AutoImplementOpsWithRef for i128 {}
 impl AutoImplementOpsWithRef for isize {}
+impl AutoImplementOpsWithRef for u8 {}
+impl AutoImplementOpsWithRef for u16 {}
+impl AutoImplementOpsWithRef for u32 {}
+impl AutoImplementOpsWithRef for u64 {}
+impl AutoImplementOpsWithRef for u128 {}
+impl AutoImplementOpsWithRef for usize {}
 impl AutoImplementOpsWithRef for f32 {}
 impl AutoImplementOpsWithRef for f64 {}
