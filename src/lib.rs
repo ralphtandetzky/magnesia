@@ -1,7 +1,7 @@
 //! A math library for Rust featuring
 //!
 //!   * Polynomials
-//!   * Matrices
+//!   * Vectors and Matrices
 //!
 //! # Goal and Scope
 //!
@@ -13,7 +13,6 @@
 //!
 //! In the future the package shall contain the following features as well:
 //!
-//!   * Vectors and Matrices
 //!   * Complex numbers and Quaternions
 //!   * Big Integers
 //!   * Fast Fourier Transform
@@ -52,11 +51,11 @@ pub mod algebra;
 /// This module provides facilities from linear algebra.
 ///
 /// This includes the following:
+///   * Vectors
 ///   * Matrices
 ///
 /// In the future, this module may also include the following:
 ///
-///   * Vectors
 ///   * Matrix Decompositions
 ///   * Affine Transformations
 ///   * Tensors
