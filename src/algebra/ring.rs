@@ -1,7 +1,8 @@
 use super::ops_with_ref::*;
 use std::cmp::PartialEq;
 
-/// Trait providing a zero element of an additive algebraic structure (like a group, a ring or a vector space).
+/// Trait providing a zero element of an additive algebraic structure
+/// (like a group, a ring or a vector space).
 pub trait Zero {
     /// Returns the zero element of an additive algebraic structure.
     fn zero() -> Self;
@@ -13,7 +14,8 @@ impl<T: From<i8>> Zero for T {
     }
 }
 
-/// Trait providing a one element of a multiplicative algebraic structure (like a group or a ring or a field).
+/// Trait providing a one element of a multiplicative algebraic structure
+/// (like a group or a ring or a field).
 pub trait One {
     /// Returns the one element of a multiplicative algebraic structure.
     fn one() -> Self;
@@ -36,12 +38,21 @@ impl<T: From<i8>> One for T {
 ///   * a monoid under multiplication,
 ///   * with multiplication being distributive with respect to addition.
 ///
-/// Please read [this Wikipedia page on rings](https://en.wikipedia.org/wiki/Ring_(mathematics))
-/// for more details.
+/// Please read [this Wikipedia page on
+/// rings](https://en.wikipedia.org/wiki/Ring_(mathematics)) for more details.
 /// Hence, when implementing the ring trait, the respective mathematical laws
 /// (like the commutative law, etc.) should be guaranteed, so the code which
 /// uses the `Ring` trait will work as expected.
-/// This being said it does not mean that computations always need to be exact.
+///
+/// Seeing this, one might expect the traits [`Add`](std::ops::Add),
+/// [`Mul`](std::ops::Mul), etc. to be required for a `Ring`.
+/// However, these may prohibit to implement data structures with zero overhead
+/// as will be explained in *Design Rational of the Ring Trait* below.
+/// Therefore, the reference ops traits from this crate have been used instead.
+///
+/// The `Ring` trait expects a mathemaically correct implementation of an
+/// algebraic ring.
+/// This being said computations need not always to be exact.
 /// For example, IEEE-754 floating point types like `f32` or `f64` only have
 /// limited precision and suffer from rounding.
 /// Therefore mathematical laws are compromised.
@@ -89,6 +100,9 @@ impl<T: From<i8>> One for T {
 /// but multiplication cannot be performed in-place efficiently.
 /// (Please convince yourself by looking considering matrices or polynomials
 /// as examples.)
+///
+/// See also: [`Field`](super::Field), [`Polynomial`](super::Polynomial),
+/// [`SMatrix`](crate::linalg::SMatrix)
 pub trait Ring:
     Clone + Zero + One + AddAssignWithRef + SubAssignWithRef + MulWithRef + NegAssign + PartialEq
 {
