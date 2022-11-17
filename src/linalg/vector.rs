@@ -1,5 +1,5 @@
-use crate::algebra::{AddAssignWithRef, Zero};
-use std::ops::{Add, AddAssign};
+use crate::algebra::{AddAssignWithRef, SubAssignWithRef, Zero};
+use std::ops::{Add, AddAssign, Sub, SubAssign};
 
 /// Statically sized mathematical vector.
 #[derive(Debug, PartialEq, Clone, Copy, Eq)]
@@ -139,6 +139,116 @@ impl<T: AddAssignWithRef, const DIM: usize> AddAssignWithRef for SVector<T, DIM>
     fn add_assign_with_ref(&mut self, other: &Self) {
         for (s, o) in self.0.iter_mut().zip(other.0.iter()) {
             s.add_assign_with_ref(o);
+        }
+    }
+}
+
+impl<T, const DIM: usize> Sub for SVector<T, DIM>
+where
+    Self: SubAssignWithRef,
+{
+    type Output = Self;
+
+    /// Implements the `-` operator for `SVector`.
+    ///
+    /// # Example
+    /// ```
+    /// # use magnesia::linalg::SVector;
+    /// let u = SVector::from([4,6]);
+    /// let v = SVector::from([3,4]);
+    /// let w = u - v;
+    /// assert_eq!(w, SVector::from([1,2]));
+    /// ```
+    fn sub(mut self, other: Self) -> Self {
+        self.sub_assign_with_ref(&other);
+        self
+    }
+}
+
+impl<T, const DIM: usize> Sub<&Self> for SVector<T, DIM>
+where
+    Self: SubAssignWithRef,
+{
+    type Output = Self;
+
+    /// Implements the `+` operator for `SVector`.
+    ///
+    /// # Example
+    /// ```
+    /// # use magnesia::linalg::SVector;
+    /// let u = SVector::from([4,6]);
+    /// let v = SVector::from([3,4]);
+    /// let w = u - &v;
+    /// assert_eq!(w, SVector::from([1,2]));
+    /// ```
+    fn sub(mut self, other: &Self) -> Self {
+        self.sub_assign_with_ref(other);
+        self
+    }
+}
+
+impl<T, const DIM: usize> SubAssign<Self> for SVector<T, DIM>
+where
+    Self: SubAssignWithRef,
+{
+    /// Implements the `-=` operator for `SVector`.
+    ///
+    /// # Example
+    /// ```
+    /// # use magnesia::linalg::SVector;
+    /// let mut u = SVector::from([4,6]);
+    /// let v = SVector::from([3,4]);
+    /// u -= v;
+    /// assert_eq!(u, SVector::from([1,2]));
+    /// ```
+    fn sub_assign(&mut self, other: Self) {
+        self.sub_assign_with_ref(&other);
+    }
+}
+
+impl<T, const DIM: usize> SubAssign<&Self> for SVector<T, DIM>
+where
+    Self: SubAssignWithRef,
+{
+    /// Implements the `-=` operator for `&SVector`.
+    ///
+    /// # Example
+    /// ```
+    /// # use magnesia::linalg::SVector;
+    /// let mut u = SVector::from([4,6]);
+    /// let v = SVector::from([3,4]);
+    /// u -= &v;
+    /// assert_eq!(u, SVector::from([1,2]));
+    /// ```
+    fn sub_assign(&mut self, other: &Self) {
+        self.sub_assign_with_ref(other);
+    }
+}
+
+impl<T: SubAssignWithRef, const DIM: usize> SubAssignWithRef for SVector<T, DIM> {
+    /// Implements the [`SubAssignWithRef`] operator for `SVector`.
+    ///
+    /// It is recommended to instead use the `-=` operator with references:
+    /// ```
+    /// # use magnesia::linalg::SVector;
+    /// let mut u = SVector::from([4,6]);
+    /// let v = SVector::from([3,4]);
+    /// u -= &v;
+    /// assert_eq!(u, SVector::from([1,2]));
+    /// ```
+    ///
+    /// # Example
+    /// ```
+    /// # use magnesia::linalg::SVector;
+    /// # use magnesia::algebra::SubAssignWithRef;
+    /// let mut u = SVector::from([4,6]);
+    /// let v = SVector::from([3,4]);
+    /// u.sub_assign_with_ref(&v);
+    /// assert_eq!(u, SVector::from([1,2]));
+    /// ```
+    fn sub_assign_with_ref(&mut self, other: &Self) {
+        for (s, o) in self.0.iter_mut().zip(other.0.iter()) {
+            s.sub_assign_with_ref(o);
         }
     }
 }
