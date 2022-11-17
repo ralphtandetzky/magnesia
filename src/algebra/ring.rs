@@ -1,5 +1,6 @@
 use super::ops_with_ref::*;
 use std::ops::{Add, AddAssign, Mul, MulAssign, Neg, Sub, SubAssign};
+use std::cmp::PartialEq;
 
 pub trait Zero {
     fn zero() -> Self;
@@ -36,6 +37,7 @@ pub trait Ring:
     + MulWithRef
     + Neg
     + NegAssign
+    + PartialEq
 {
 }
 
