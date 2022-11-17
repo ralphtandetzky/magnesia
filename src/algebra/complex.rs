@@ -1,4 +1,4 @@
-use super::{AddAssignWithRef, One, SubAssignWithRef, Zero};
+use super::{AddAssignWithRef, MulWithRef, One, SubAssignWithRef, Zero};
 use std::ops::{Add, AddAssign, Sub, SubAssign};
 
 /// Complex numbers consisting of real and imaginary part.
@@ -136,7 +136,7 @@ impl<T: SubAssign<U>, U> SubAssign<Complex<U>> for Complex<T> {
     /// let mut a = Complex::new(1, 2);
     /// let b = Complex::new(3, 4);
     /// a -= b;
-    /// assert_eq!(a, Complex::new(4,6));
+    /// assert_eq!(a, Complex::new(-2,-2));
     /// ```
     fn sub_assign(&mut self, other: Complex<U>) {
         self.re -= other.re;
@@ -154,10 +154,32 @@ impl<T: SubAssignWithRef> SubAssignWithRef for Complex<T> {
     /// let mut a = Complex::new(1, 2);
     /// let b = Complex::new(3, 4);
     /// a.sub_assign_with_ref(&b);
-    /// assert_eq!(a, Complex::new(4,6));
+    /// assert_eq!(a, Complex::new(-2,-2));
     /// ```
     fn sub_assign_with_ref(&mut self, other: &Self) {
         self.re.sub_assign_with_ref(&other.re);
         self.im.sub_assign_with_ref(&other.im);
+    }
+}
+
+impl<T: MulWithRef + AddAssignWithRef + SubAssignWithRef> MulWithRef for Complex<T> {
+    /// Implements multiplication of complex numbers by refernce.
+    ///
+    /// # Example
+    /// ```
+    /// # use::magnesia::algebra::Complex;
+    /// # use::magnesia::algebra::MulWithRef;
+    /// let a = Complex::new(1, 2);
+    /// let b = a.mul_with_ref(&a);
+    /// assert_eq!(b, Complex::new(-3, 4));
+    /// ```
+    fn mul_with_ref(&self, other: &Self) -> Self {
+        let mut p1 = self.re.mul_with_ref(&other.re);
+        let mut p2 = self.re.mul_with_ref(&other.im);
+        let p3 = self.im.mul_with_ref(&other.re);
+        let p4 = self.im.mul_with_ref(&other.im);
+        p1.sub_assign_with_ref(&p4);
+        p2.add_assign_with_ref(&p3);
+        Complex::new(p1, p2)
     }
 }
