@@ -7,7 +7,7 @@ mod ring;
 mod sqrt;
 
 pub use complex::Complex;
-pub use conj::Conj;
+pub use conj::{Conj, ConjAssign};
 pub use field::Field;
 pub use ops_with_ref::{AddAssignWithRef, DivWithRef, MulWithRef, NegAssign, SubAssignWithRef};
 pub use polynomial::Polynomial;

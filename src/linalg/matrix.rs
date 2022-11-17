@@ -1,5 +1,7 @@
 use super::SVector;
-use crate::algebra::{AddAssignWithRef, MulWithRef, NegAssign, One, Ring, SubAssignWithRef, Zero};
+use crate::algebra::{
+    AddAssignWithRef, ConjAssign, MulWithRef, NegAssign, One, Ring, SubAssignWithRef, Zero,
+};
 use std::ops::{Add, AddAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
 trait Dimension {}
@@ -480,3 +482,36 @@ impl<T: NegAssign, const M: usize, const N: usize> Neg for SMatrix<T, M, N> {
 }
 
 impl<T: Ring, const N: usize> Ring for SMatrix<T, N, N> {}
+
+impl<T: ConjAssign, const M: usize, const N: usize> ConjAssign for SMatrix<T, M, N> {
+    fn conj_assign(&mut self) {
+        for row in &mut self.0 {
+            for x in row {
+                x.conj_assign();
+            }
+        }
+    }
+}
+
+#[test]
+fn test_conj_assign_on_i8_smatrix() {
+    let mut a = SMatrix::from([[1i8, 2i8], [3i8, 4i8]]);
+    let b = a;
+    a.conj_assign();
+    assert_eq!(a, b);
+}
+
+#[test]
+fn test_conj_assign_on_complex_i8_smatrix() {
+    use crate::algebra::Complex;
+    let mut a = SMatrix::from([
+        [Complex::new(1i8, 1i8), Complex::new(2i8, 2i8)],
+        [Complex::new(3i8, 3i8), Complex::new(4i8, 4i8)],
+    ]);
+    let b = SMatrix::from([
+        [Complex::new(1i8, -1i8), Complex::new(2i8, -2i8)],
+        [Complex::new(3i8, -3i8), Complex::new(4i8, -4i8)],
+    ]);
+    a.conj_assign();
+    assert_eq!(a, b);
+}
