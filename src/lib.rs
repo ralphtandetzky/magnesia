@@ -27,6 +27,8 @@
 //!
 //! Contributions for this cause are highly welcome!
 
+#![deny(missing_docs)]
+
 /// This module provides facilities from abstract algebra.
 ///
 /// This includes the following:
