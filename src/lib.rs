@@ -49,6 +49,9 @@
 /// [`algebra`](crate::linalg).
 pub mod algebra;
 
+/// Provides elementary and special functions for different types.
+pub mod functions;
+
 /// This module provides facilities from linear algebra.
 ///
 /// This includes the following:
