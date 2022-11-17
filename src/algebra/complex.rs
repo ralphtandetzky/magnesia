@@ -1,4 +1,4 @@
-use super::{AddAssignWithRef, MulWithRef, One, SubAssignWithRef, Zero};
+use super::{AddAssignWithRef, MulWithRef, NegAssign, One, SubAssignWithRef, Zero};
 use std::ops::{Add, AddAssign, Sub, SubAssign};
 
 /// Complex numbers consisting of real and imaginary part.
@@ -21,6 +21,21 @@ impl<T> Complex<T> {
     /// assert_eq!(z.im, 2.0);
     pub fn new(re: T, im: T) -> Self {
         Self { re, im }
+    }
+}
+
+impl<T: NegAssign> Complex<T> {
+    /// Computes the complex conjugate of a complex number.
+    ///
+    /// # Example
+    /// ```
+    /// # use::magnesia::algebra::Complex;
+    /// let z = Complex::new(1.0, 2.0);
+    /// assert_eq!(z.conj(), Complex::new(1.0, -2.0));
+    /// ```
+    pub fn conj(mut self) -> Self {
+        self.im.neg_assign();
+        self
     }
 }
 
