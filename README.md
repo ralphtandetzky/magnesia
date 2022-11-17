@@ -1,3 +1,24 @@
+<p align="center">
+  <a href="https://github.com/ralphtandetzky/magnesia/actions"> 
+    <img src="https://img.shields.io/github/workflow/status/ralphtandetzky/magnesia/Cargo%20Build%20&%20Test?label=build%20%26%20test" /> 
+  </a>
+  <a href="https://docs.rs/magnesia/latest/magnesia/"> 
+    <img src="https://img.shields.io/docsrs/magnesia" /> 
+  </a>
+  <a href="https://crates.io/crates/magnesia"> 
+    <img src="https://img.shields.io/crates/d/magnesia" /> 
+  </a>
+  <a href="https://choosealicense.com/licenses/mit/"> 
+    <img src="https://img.shields.io/crates/l/magnesia" /> 
+  </a>
+  <a href="https://crates.io/crates/magnesia"> 
+    <img src="https://img.shields.io/crates/v/magnesia" /> 
+  </a>
+  <a href="https://github.com/ralphtandetzky/magnesia/graphs/contributors"> 
+    <img src="https://img.shields.io/github/contributors/ralphtandetzky/magnesia" /> 
+  </a>
+</p>
+  
 # Magnesia
 
 A math library for Rust featuring
