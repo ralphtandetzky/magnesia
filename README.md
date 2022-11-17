@@ -44,6 +44,10 @@ Please find the reference documentation [here on docs.rs](https://docs.rs/magnes
 
 Contributions are highly welcome. To do so, please send me a pull request via github. It doesn't have to be perfect at first, but expect feedback and change requests before merges into the main repository.
 
+## Bug Reports and Feature Requests
+
+If you spot a bug, please report it [here](https://github.com/ralphtandetzky/magnesia/issues). If you would like a feature to be worked on with higher priority, please don't hesitate to let me know [here](https://github.com/ralphtandetzky/magnesia/issues).
+
 ## License
 
 Magnesia is distributed under the [MIT License](LICENSE.md).
