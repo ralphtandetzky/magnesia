@@ -1,12 +1,14 @@
 use std::ops::{Div, Mul};
 
-/// This trait allows zero overhead implementation of the `*` operator by
-/// taking operands by reference.
+/// This trait tells that the implementing type `T` provides a multiplication
+/// of `&T` by `&T`.
 ///
-/// See the documentation of [`Ring`](crate::algebra::Ring) for a detailed
-/// explanation on the design rationale.
+/// Taking arguments by reference (not by value) can allow more efficient
+/// client code compared to the trait `Mul<T, Output=T>`.
+/// This is because the client code never needs to make an extra copy
+/// of the arguments.
 pub trait MulRefs {
-    /// Multiplies `*self` by `*rhs`.
+    /// Multiplies `self` by `rhs`.
     fn mul_refs(&self, rhs: &Self) -> Self;
 }
 
@@ -19,13 +21,15 @@ where
     }
 }
 
-/// This trait allows zero overhead implementation of the `/` operator by
-/// taking operands by reference.
+/// This trait tells that the implementing type `T` provides a division
+/// operator taking `&T` and `&T` as arguments.
 ///
-/// See the documentation of [`Ring`](crate::algebra::Ring) for a detailed
-/// explanation on the design rationale.
+/// Taking arguments by reference (not by value) can allow more efficient
+/// client code compared to the trait `Div<T, Output=T>`.
+/// This is because the client code never needs to make an extra copy
+/// of the arguments.
 pub trait DivRefs {
-    /// Divides `*self` by `*rhs`.
+    /// Divides `self` by `rhs`.
     fn div_refs(&self, rhs: &Self) -> Self;
 }
 
