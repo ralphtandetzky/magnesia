@@ -1,5 +1,5 @@
-use crate::algebra::{AddAssignWithRef, One, SubAssignWithRef, Zero};
-use std::ops::{Add, AddAssign, Sub, SubAssign};
+use crate::algebra::{AddAssignWithRef, One, SubAssignWithRef, Zero, MulWithRef};
+use std::ops::{Add, AddAssign, Mul, Sub, SubAssign};
 
 trait Dimension {}
 
@@ -231,6 +231,41 @@ impl<T: SubAssignWithRef, const NUM_ROWS: usize, const NUM_COLS: usize> SubAssig
             for (li, ri) in lo.iter_mut().zip(ro.iter()) {
                 li.sub_assign_with_ref(ri);
             }
+        }
+    }
+}
+
+impl<'a, 'b, T: AddAssign + MulWithRef + Zero, const L: usize, const M: usize, const N: usize>
+    Mul<&'a SMatrix<T, M, N>> for &'b SMatrix<T, L, M>
+{
+    type Output = SMatrix<T, L, N>;
+
+    /// Multiplies two matrices
+    ///
+    /// # Example
+    /// ```
+    /// # use magnesia::linalg::SMatrix;
+    /// let a = SMatrix::from([[1,2,3],[4,5,6]]);
+    /// let b = SMatrix::from([[1,2],[3,4],[5,6]]);
+    /// let c = &a * &b;
+    /// assert_eq!(c, SMatrix::from([[22,28],[49,64]]));
+    /// ```
+    fn mul(self, other: &'a SMatrix<T, M, N>) -> Self::Output {
+        let mut l: usize = 0;
+        Self::Output {
+            0: [(); L].map(|_| {
+                let mut n: usize = 0;
+                let row = [(); N].map(|_| {
+                    let mut sum = T::zero();
+                    for m in 0..M {
+                        sum += self.0[l][m].mul_with_ref(&other.0[m][n]);
+                    }
+                    n += 1;
+                    sum
+                });
+                l += 1;
+                row
+            }),
         }
     }
 }
