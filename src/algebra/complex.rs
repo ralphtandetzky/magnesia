@@ -1,4 +1,5 @@
 use super::{conj::Conj, Field, MulRefs, One, Ring, Sqrt, Zero};
+use crate::functions::{Cos, Exp, Sin};
 use std::ops::{Add, AddAssign, Div, Mul, MulAssign, Neg, Sub, SubAssign};
 
 /// Complex numbers consisting of real and imaginary part.
@@ -341,3 +342,23 @@ impl<T: Ring> Ring for Complex<T> {}
 // Otherwise, the ring `T` will not be free from zero divisors and thus not
 // be a field.
 impl<T: Field> Field for Complex<T> {}
+
+impl<T> Exp for Complex<T>
+where
+    T: Exp + Sin + Cos + MulRefs + Clone,
+{
+    fn exp(self) -> Self {
+        let e = self.re.exp();
+        let c = self.im.clone().cos();
+        let s = self.im.sin();
+        Self::new(e.mul_refs(&c), e.mul_refs(&s))
+    }
+}
+
+#[test]
+fn test_exp_complex_f32() {
+    let z = Complex::new(1f32, std::f32::consts::PI / 6f32);
+    let e = z.exp();
+    assert!((e.re - std::f32::consts::E * 0.75.sqrt()).abs() <= f32::EPSILON * std::f32::consts::E);
+    assert!((e.im - std::f32::consts::E / 2f32).abs() <= f32::EPSILON * std::f32::consts::E);
+}
