@@ -30,9 +30,7 @@ impl<T: Zero, const NUM_ROWS: usize, const NUM_COLS: usize> Zero
     /// assert_eq!(m, SMatrix::from([[0,0],[0,0],[0,0]]));
     /// ```
     fn zero() -> Self {
-        Self {
-            0: [(); NUM_ROWS].map(|_| [(); NUM_COLS].map(|_| T::zero())),
-        }
+        Self([(); NUM_ROWS].map(|_| [(); NUM_COLS].map(|_| T::zero())))
     }
 }
 
@@ -51,18 +49,16 @@ impl<T: Zero + One, const NUM_ROWS: usize, const NUM_COLS: usize> One
     /// ```
     fn one() -> Self {
         let mut m: usize = 0;
-        Self {
-            0: [(); NUM_ROWS].map(|_| {
-                let mut n: usize = 0;
-                let row = [(); NUM_COLS].map(|_| {
-                    let x = if m == n { T::one() } else { T::zero() };
-                    n += 1;
-                    x
-                });
-                m += 1;
-                row
-            }),
-        }
+        Self([(); NUM_ROWS].map(|_| {
+            let mut n: usize = 0;
+            let row = [(); NUM_COLS].map(|_| {
+                let x = if m == n { T::one() } else { T::zero() };
+                n += 1;
+                x
+            });
+            m += 1;
+            row
+        }))
     }
 }
 
@@ -77,7 +73,7 @@ impl<T, const NUM_ROWS: usize, const NUM_COLS: usize> From<[[T; NUM_COLS]; NUM_R
     /// let a = SMatrix::from([[1,2],[3,4]]);
     /// ```
     fn from(coefficients: [[T; NUM_COLS]; NUM_ROWS]) -> Self {
-        Self { 0: coefficients }
+        Self(coefficients)
     }
 }
 
@@ -318,21 +314,19 @@ impl<'a, T: AddAssign + MulWithRef + Zero, const L: usize, const M: usize, const
     /// ```
     fn mul(self, other: &'a SMatrix<T, M, N>) -> Self::Output {
         let mut l: usize = 0;
-        Self::Output {
-            0: [(); L].map(|_| {
-                let mut n: usize = 0;
-                let row = [(); N].map(|_| {
-                    let mut sum = T::zero();
-                    for m in 0..M {
-                        sum += self.0[l][m].mul_with_ref(&other.0[m][n]);
-                    }
-                    n += 1;
-                    sum
-                });
-                l += 1;
-                row
-            }),
-        }
+        SMatrix([(); L].map(|_| {
+            let mut n: usize = 0;
+            let row = [(); N].map(|_| {
+                let mut sum = T::zero();
+                for m in 0..M {
+                    sum += self.0[l][m].mul_with_ref(&other.0[m][n]);
+                }
+                n += 1;
+                sum
+            });
+            l += 1;
+            row
+        }))
     }
 }
 
