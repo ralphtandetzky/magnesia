@@ -1,6 +1,6 @@
 use super::ops_with_ref::*;
 use super::ring::{One, Ring, Zero};
-use std::ops::{AddAssign, SubAssign, Mul};
+use std::ops::{AddAssign, Mul, SubAssign};
 
 /**
 A polynomial of arbitrary order.
