@@ -1,3 +1,4 @@
+use super::SVector;
 use crate::algebra::{AddAssignWithRef, MulWithRef, NegAssign, One, Ring, SubAssignWithRef, Zero};
 use std::ops::{Add, AddAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
@@ -406,6 +407,36 @@ impl<T: AddAssign + MulWithRef + Zero, const N: usize> MulWithRef for SMatrix<T,
     /// ```
     fn mul_with_ref(&self, other: &Self) -> Self {
         self * other
+    }
+}
+
+impl<'a, 'b, T: Zero + MulWithRef + AddAssignWithRef, const M: usize, const N: usize>
+    Mul<&'b SVector<T, N>> for &'a SMatrix<T, M, N>
+{
+    type Output = SVector<T, M>;
+
+    /// Implements multiplication of matrix by vector.
+    ///
+    /// # Example
+    /// ```
+    /// # use magnesia::linalg::SMatrix;
+    /// # use magnesia::linalg::SVector;
+    /// let m = SMatrix::from([[1,2], [3,4]]);
+    /// let u = SVector::from([1,2]);
+    /// let v = &m * &u;
+    /// assert_eq!(v, SVector::from([1*1 + 2*2, 1*3 + 2*4]));
+    /// ```
+    fn mul(self, vec: &'b SVector<T, N>) -> Self::Output {
+        let mut i = 0 as usize;
+        SVector::from([(); M].map(|_| {
+            let mut sum = T::zero();
+            for (m, v) in self.0[i].iter().zip(vec) {
+                let prod = m.mul_with_ref(v);
+                sum.add_assign_with_ref(&prod);
+            }
+            i += 1;
+            sum
+        }))
     }
 }
 

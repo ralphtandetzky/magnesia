@@ -1,5 +1,5 @@
-use crate::algebra::{AddAssignWithRef, SubAssignWithRef, Zero};
-use std::ops::{Add, AddAssign, Sub, SubAssign};
+use crate::algebra::{AddAssignWithRef, MulWithRef, SubAssignWithRef, Zero};
+use std::ops::{Add, AddAssign, Mul, MulAssign, Sub, SubAssign};
 
 /// Statically sized mathematical vector.
 #[derive(Debug, PartialEq, Clone, Copy, Eq)]
@@ -250,5 +250,144 @@ impl<T: SubAssignWithRef, const DIM: usize> SubAssignWithRef for SVector<T, DIM>
         for (s, o) in self.0.iter_mut().zip(other.0.iter()) {
             s.sub_assign_with_ref(o);
         }
+    }
+}
+
+impl<T, const DIM: usize> Mul<Self> for SVector<T, DIM>
+where
+    for<'a> Self: Mul<&'a Self, Output = T>,
+{
+    type Output = T;
+
+    /// Implements the dot product of two vectors.
+    ///
+    /// # Example
+    /// ```
+    /// # use magnesia::linalg::SVector;
+    /// let u = SVector::from([1,2]);
+    /// let v = SVector::from([3,4]);
+    /// let x = u * v;
+    /// assert_eq!(x, 1 * 3 + 2 * 4);
+    /// ```
+    fn mul(self, other: Self) -> T {
+        self * &other
+    }
+}
+
+impl<T: Zero + MulWithRef + AddAssignWithRef, const DIM: usize> Mul<&Self> for SVector<T, DIM> {
+    type Output = T;
+
+    /// Implements the dot product of two vectors.
+    ///
+    /// # Example
+    /// ```
+    /// # use magnesia::linalg::SVector;
+    /// let u = SVector::from([1,2]);
+    /// let v = SVector::from([3,4]);
+    /// let x = u * &v;
+    /// assert_eq!(x, 1 * 3 + 2 * 4);
+    /// ```
+    fn mul(self, other: &Self) -> Self::Output {
+        let mut sum = T::zero();
+        for (l, r) in self.0.iter().zip(other.0.iter()) {
+            let prod = l.mul_with_ref(r);
+            sum.add_assign_with_ref(&prod);
+        }
+        sum
+    }
+}
+
+impl<T: MulWithRef, const DIM: usize> Mul<T> for SVector<T, DIM> {
+    type Output = Self;
+
+    /// Multiplies a vector with a scalar.
+    ///
+    /// # Example
+    /// ```
+    /// # use magnesia::linalg::SVector;
+    /// let u = SVector::from([1,2]);
+    /// let v = u * 2;
+    /// assert_eq!(v, SVector::from([2,4]));
+    /// ```
+    fn mul(self, other: T) -> Self::Output {
+        self * &other
+    }
+}
+
+impl<T: MulWithRef, const DIM: usize> Mul<&T> for SVector<T, DIM> {
+    type Output = Self;
+
+    /// Multiplies a vector with a scalar.
+    ///
+    /// # Example
+    /// ```
+    /// # use magnesia::linalg::SVector;
+    /// let u = SVector::from([1,2]);
+    /// let v = u * &2;
+    /// assert_eq!(v, SVector::from([2,4]));
+    /// ```
+    fn mul(mut self, other: &T) -> Self::Output {
+        self *= other;
+        self
+    }
+}
+
+impl<T: MulWithRef, const DIM: usize> MulAssign<T> for SVector<T, DIM> {
+    /// Multiplies a vector with a scalar in-place.
+    ///
+    /// # Example
+    /// ```
+    /// # use magnesia::linalg::SVector;
+    /// let mut u = SVector::from([1,2]);
+    /// u *= 2;
+    /// assert_eq!(u, SVector::from([2,4]));
+    /// ```
+    fn mul_assign(&mut self, other: T) {
+        *self *= &other;
+    }
+}
+
+impl<T: MulWithRef, const DIM: usize> MulAssign<&T> for SVector<T, DIM> {
+    /// Multiplies a vector with a scalar in-place.
+    ///
+    /// # Example
+    /// ```
+    /// # use magnesia::linalg::SVector;
+    /// let mut u = SVector::from([1,2]);
+    /// u *= &2;
+    /// assert_eq!(u, SVector::from([2,4]));
+    /// ```
+    fn mul_assign(&mut self, other: &T) {
+        for x in self {
+            let a = x.mul_with_ref(other);
+            *x = a;
+        }
+    }
+}
+
+impl<T, const DIM: usize> IntoIterator for SVector<T, DIM> {
+    type Item = <[T; DIM] as IntoIterator>::Item;
+    type IntoIter = <[T; DIM] as IntoIterator>::IntoIter;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.into_iter()
+    }
+}
+
+impl<'a, T, const DIM: usize> IntoIterator for &'a SVector<T, DIM> {
+    type Item = <&'a [T; DIM] as IntoIterator>::Item;
+    type IntoIter = <&'a [T; DIM] as IntoIterator>::IntoIter;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.iter()
+    }
+}
+
+impl<'a, T, const DIM: usize> IntoIterator for &'a mut SVector<T, DIM> {
+    type Item = <&'a mut [T; DIM] as IntoIterator>::Item;
+    type IntoIter = <&'a mut [T; DIM] as IntoIterator>::IntoIter;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.iter_mut()
     }
 }
