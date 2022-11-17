@@ -1,6 +1,6 @@
 use super::{
-    ops_with_ref::DivWithRef, AddAssignWithRef, Conj, Field, MulWithRef, NegAssign, One, Ring,
-    Sqrt, SubAssignWithRef, Zero,
+    conj::ConjAssign, ops_with_ref::DivWithRef, AddAssignWithRef, Field, MulWithRef, NegAssign,
+    One, Ring, Sqrt, SubAssignWithRef, Zero,
 };
 use std::ops::{Add, AddAssign, Div, Mul, MulAssign, Neg, Sub, SubAssign};
 
@@ -27,18 +27,18 @@ impl<T> Complex<T> {
     }
 }
 
-impl<T: NegAssign> Conj for Complex<T> {
+impl<T: NegAssign> ConjAssign for Complex<T> {
     /// Computes the complex conjugate of a complex number.
     ///
     /// # Example
     /// ```
     /// # use::magnesia::algebra::Complex;
-    /// let z = Complex::new(1.0, 2.0);
-    /// assert_eq!(z.conj(), Complex::new(1.0, -2.0));
+    /// let mut z = Complex::new(1.0, 2.0);
+    /// z.conj_assign();
+    /// assert_eq!(z, Complex::new(1.0, -2.0));
     /// ```
-    fn conj(mut self) -> Self {
+    fn conj_assign(&mut self) {
         self.im.neg_assign();
-        self
     }
 }
 
