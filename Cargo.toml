@@ -2,6 +2,16 @@
 name = "magnesia"
 version = "0.1.0"
 edition = "2021"
+license = "MIT"
+keywords = ["maths"]
+categories = ["algorithms", "mathematics", "science"]
+description = "A math library for Rust"
+homepage = "https://github.com/ralphtandetzky/magnesia"
+repository = "https://github.com/ralphtandetzky/magnesia"
+documentation = "https://github.com/ralphtandetzky/magnesia"
+readme = "README.md"
+authors = ["Ralph Tandetzky"]
+
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
