@@ -22,7 +22,9 @@
 # Magnesia
 
 A math library for Rust featuring
+
 * Polynomials
+* Matrices
 
 The goal of Magnesia is to provide an easy to use yet efficient API for mathematical applications. Magnesia may not be feature rich and optimized yet, but its interfaces are designed such that extensions and zero overhead implementations are possible.
 

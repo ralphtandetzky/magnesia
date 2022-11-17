@@ -1,6 +1,7 @@
 //! A math library for Rust featuring
 //!
 //!   * Polynomials
+//!   * Matrices
 //!
 //! # Goal and Scope
 //!
