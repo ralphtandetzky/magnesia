@@ -361,3 +361,9 @@ impl<T: NegAssign> NegAssign for Complex<T> {
 }
 
 impl<T: Ring> Ring for Complex<T> {}
+
+// Actually, this is a lie. `Complex<T>` will only be a `Field` in the
+// mathematical sense, if there is no `x` of type `T` with `x * x + 1 == 0`.
+// Otherwise, the ring `T` will not be free from zero divisors and thus not
+// be a field.
+impl<T: Field> Field for Complex<T> {}
