@@ -1,5 +1,5 @@
 use super::{
-    ops_with_ref::DivWithRef, AddAssignWithRef, Field, MulWithRef, NegAssign, One, Ring,
+    ops_with_ref::DivWithRef, AddAssignWithRef, Field, MulWithRef, NegAssign, One, Ring, Sqrt,
     SubAssignWithRef, Zero,
 };
 use std::ops::{Add, AddAssign, Div, Mul, MulAssign, Neg, Sub, SubAssign};
@@ -57,6 +57,21 @@ impl<T: AddAssignWithRef + MulWithRef> Complex<T> {
         let p2 = self.im.mul_with_ref(&self.im);
         p1.add_assign_with_ref(&p2);
         p1
+    }
+}
+
+impl<T: AddAssignWithRef + MulWithRef + Sqrt> Complex<T> {
+    /// Computes the absolute value of a complex number.
+    ///
+    /// # Example
+    /// ```
+    /// # use magnesia::algebra::Complex;
+    /// let z = Complex::new(3f32, 4f32);
+    /// let a = z.abs();
+    /// assert_eq!(a, 5f32);
+    /// ```
+    pub fn abs(&self) -> T {
+        self.sqr_norm().sqrt()
     }
 }
 
