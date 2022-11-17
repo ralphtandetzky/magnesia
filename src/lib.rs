@@ -1,5 +1,6 @@
 //! A math library for Rust featuring
-//! * Polynomials
+//!
+//!   * Polynomials
 //!
 //! # Goal and Scope
 //!
@@ -10,16 +11,19 @@
 //! possible.
 //!
 //! In the future the package shall contain the following features as well:
-//! * Vectors and Matrices
-//! * Complex numbers and Quaternions
-//! * Fast Fourier Transform
-//! * Symbolic and numerical differentiation
-//! * Numerical Optimization
-//! * Root finding
-//! * Interpolation
-//! * Integration and solving differential equations
-//! * Geometrical primitives
-//! * Etc.
+//!
+//!   * Vectors and Matrices
+//!   * Complex numbers and Quaternions
+//!   * Big Integers
+//!   * Fast Fourier Transform
+//!   * Symbolic and numerical differentiation
+//!   * Numerical Optimization
+//!   * Root finding
+//!   * Interpolation
+//!   * Integration and solving differential equations
+//!   * Geometrical primitives
+//!   * etc.
+//!
 //! Contributions for this cause are highly welcome!
 
 pub mod algebra;

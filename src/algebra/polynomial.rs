@@ -205,7 +205,7 @@ impl<T: Ring> std::ops::Sub for Polynomial<T> {
 }
 
 impl<T: Ring> std::ops::SubAssign for Polynomial<T> {
-    /// Implements the -= operator.
+    /// Implements the `-=` operator.
     ///
     /// # Example
     /// ```
@@ -255,11 +255,13 @@ impl<T: Ring> SubAssignWithRef for Polynomial<T> {
 impl<T: Ring> std::ops::Mul for Polynomial<T> {
     type Output = Self;
 
-    /// Implements the `+` operator for multiplying two polynomials.
+    /// Implements the `*` operator for multiplying two polynomials.
     ///
     /// # Example
     /// ```
     /// # use magnesia::algebra::Polynomial;
+    /// // p(x) = 1 + 2*x + 3*x^2
+    /// // q(x) = x
     /// let p = Polynomial::from_coefficients(vec![1, 2, 3]);
     /// let q = Polynomial::from_coefficients(vec![0, 1]);
     /// let r = p * q;
@@ -271,11 +273,13 @@ impl<T: Ring> std::ops::Mul for Polynomial<T> {
 }
 
 impl<T: Ring> std::ops::MulAssign for Polynomial<T> {
-    /// Implements the `+=` operator for multiplying two polynomials.
+    /// Implements the `*=` operator for multiplying two polynomials.
     ///
     /// # Example
     /// ```
     /// # use magnesia::algebra::Polynomial;
+    /// // p(x) = 1 + 2*x + 3*x^2
+    /// // q(x) = x
     /// let mut p = Polynomial::from_coefficients(vec![1, 2, 3]);
     /// let q = Polynomial::from_coefficients(vec![0, 1]);
     /// p *= q;
@@ -293,6 +297,8 @@ impl<T: Ring> MulWithRef for Polynomial<T> {
     /// following syntax
     /// ```
     /// # use magnesia::algebra::Polynomial;
+    /// // p(x) = 1 + 2*x + 3*x^2
+    /// // q(x) = x
     /// let p = Polynomial::from_coefficients(vec![1, 2, 3]);
     /// let q = Polynomial::from_coefficients(vec![0, 1]);
     /// let r = &p * &q;
@@ -303,6 +309,8 @@ impl<T: Ring> MulWithRef for Polynomial<T> {
     /// ```
     /// # use magnesia::algebra::Polynomial;
     /// # use magnesia::algebra::MulWithRef;
+    /// // p(x) = 1 + 2*x + 3*x^2
+    /// // q(x) = x
     /// let p = Polynomial::from_coefficients(vec![1, 2, 3]);
     /// let q = Polynomial::from_coefficients(vec![0, 1]);
     /// let r = p.mul_with_ref(&q);
@@ -345,8 +353,8 @@ impl<T: Ring> NegAssign for Polynomial<T> {
     ///
     /// # Example
     /// ```
-    /// use magnesia::algebra::Polynomial;
-    /// use magnesia::algebra::NegAssign;
+    /// # use magnesia::algebra::Polynomial;
+    /// # use magnesia::algebra::NegAssign;
     /// let mut p = Polynomial::from_coefficients(vec![1, 2, 3]);
     /// p.neg_assign();
     /// assert_eq!(p, Polynomial::from_coefficients(vec![-1, -2, -3]));
@@ -400,6 +408,8 @@ impl<T: Ring> Mul for &Polynomial<T> {
     /// # Example
     /// ```
     /// # use magnesia::algebra::Polynomial;
+    /// // p(x) = 1 + 2*x + 3*x^2
+    /// // q(x) = x
     /// let p = Polynomial::from_coefficients(vec![1, 2, 3]);
     /// let q = Polynomial::from_coefficients(vec![0, 1]);
     /// let r = &p * &q;
