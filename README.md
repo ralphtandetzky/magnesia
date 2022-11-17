@@ -8,7 +8,7 @@ A math library for Rust featuring
 Add this to your `Cargo.toml`:
 ```text
 [dependencies]
-magnesia = "0.1.0"
+magnesia = "0.1.1"
 ```
 
 ## License

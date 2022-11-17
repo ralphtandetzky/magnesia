@@ -1,13 +1,13 @@
 [package]
 name = "magnesia"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 license = "MIT"
 keywords = ["maths"]
 categories = ["algorithms", "mathematics", "science"]
 description = "A math library for Rust"
-homepage = "https://github.com/ralphtandetzky/magnesia"
-repository = "https://github.com/ralphtandetzky/magnesia"
+homepage = "https://docs.rs/magnesia/0.1.1/magnesia/"
+repository = "https://docs.rs/magnesia/0.1.1/magnesia/"
 documentation = "https://github.com/ralphtandetzky/magnesia"
 readme = "README.md"
 authors = ["Ralph Tandetzky"]
