@@ -1,5 +1,5 @@
-use crate::algebra::{AddAssignWithRef, One, Zero};
-use std::ops::{Add, AddAssign};
+use crate::algebra::{AddAssignWithRef, One, SubAssignWithRef, Zero};
+use std::ops::{Add, AddAssign, Sub, SubAssign};
 
 trait Dimension {}
 
@@ -153,3 +153,84 @@ impl<T: AddAssignWithRef, const NUM_ROWS: usize, const NUM_COLS: usize> AddAssig
     }
 }
 
+impl<T: SubAssignWithRef, const NUM_ROWS: usize, const NUM_COLS: usize> Sub
+    for SMatrix<T, NUM_ROWS, NUM_COLS>
+{
+    type Output = Self;
+
+    /// Subtracts two matrices.
+    ///
+    /// # Example
+    /// ```
+    /// # use magnesia::linalg::SMatrix;
+    /// let a = SMatrix::from([[1,2,3],[4,5,6]]);
+    /// let b = SMatrix::from([[1,1,1],[1,1,1]]);
+    /// let c = a - b;
+    /// assert_eq!(c, SMatrix::from([[0,1,2],[3,4,5]]));
+    /// ```
+    fn sub(mut self, other: Self) -> Self {
+        self -= &other;
+        self
+    }
+}
+
+impl<T: SubAssignWithRef, const NUM_ROWS: usize, const NUM_COLS: usize> Sub<&Self>
+    for SMatrix<T, NUM_ROWS, NUM_COLS>
+{
+    type Output = Self;
+
+    /// Subtracts two matrices.
+    ///
+    /// # Example
+    /// ```
+    /// # use magnesia::linalg::SMatrix;
+    /// let a = SMatrix::from([[1,2,3],[4,5,6]]);
+    /// let b = SMatrix::from([[1,1,1],[1,1,1]]);
+    /// let c = a - &b;
+    /// assert_eq!(c, SMatrix::from([[0,1,2],[3,4,5]]));
+    /// ```
+    fn sub(mut self, other: &Self) -> Self {
+        self -= other;
+        self
+    }
+}
+
+impl<T: SubAssignWithRef, const NUM_ROWS: usize, const NUM_COLS: usize> SubAssign<Self>
+    for SMatrix<T, NUM_ROWS, NUM_COLS>
+{
+    /// Subtracts two matrices in-place.
+    ///
+    /// # Example
+    /// ```
+    /// # use magnesia::linalg::SMatrix;
+    /// let mut a = SMatrix::from([[1,2,3],[4,5,6]]);
+    /// let b = SMatrix::from([[1,1,1],[1,1,1]]);
+    /// a -= b;
+    /// assert_eq!(a, SMatrix::from([[0,1,2],[3,4,5]]));
+    /// ```
+    fn sub_assign(&mut self, other: Self) {
+        *self -= &other;
+    }
+}
+
+impl<T: SubAssignWithRef, const NUM_ROWS: usize, const NUM_COLS: usize> SubAssign<&Self>
+    for SMatrix<T, NUM_ROWS, NUM_COLS>
+{
+    /// Subtracts two matrices in-place.
+    ///
+    /// # Example
+    /// ```
+    /// # use magnesia::linalg::SMatrix;
+    /// let mut a = SMatrix::from([[1,2,3],[4,5,6]]);
+    /// let b = SMatrix::from([[1,1,1],[1,1,1]]);
+    /// a -= &b;
+    /// assert_eq!(a, SMatrix::from([[0,1,2],[3,4,5]]));
+    /// ```
+    fn sub_assign(&mut self, other: &Self) {
+        for (lo, ro) in self.0.iter_mut().zip(other.0.iter()) {
+            for (li, ri) in lo.iter_mut().zip(ro.iter()) {
+                li.sub_assign_with_ref(ri);
+            }
+        }
+    }
+}
