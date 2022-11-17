@@ -1,5 +1,5 @@
 use super::{conj::Conj, Field, MulRefs, One, Ring, Sqrt, Zero};
-use crate::functions::{Cos, Exp, Sin};
+use crate::functions::{Cos, Cosh, Exp, Sin, Sinh};
 use std::ops::{Add, AddAssign, Div, Mul, MulAssign, Neg, Sub, SubAssign};
 
 /// Complex numbers consisting of real and imaginary part.
@@ -361,4 +361,15 @@ fn test_exp_complex_f32() {
     let e = z.exp();
     assert!((e.re - std::f32::consts::E * 0.75.sqrt()).abs() <= f32::EPSILON * std::f32::consts::E);
     assert!((e.im - std::f32::consts::E / 2f32).abs() <= f32::EPSILON * std::f32::consts::E);
+}
+
+impl<T> Sin for Complex<T>
+where
+    T: Sin + Cos + Sinh + Cosh + MulRefs + Clone,
+{
+    fn sin(self) -> Self {
+        let re = self.re.clone().sin().mul_refs(&self.im.clone().cosh());
+        let im = self.re.cosh().mul_refs(&self.im.sin());
+        Self::new(re, im)
+    }
 }
