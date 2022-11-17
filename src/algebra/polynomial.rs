@@ -117,7 +117,7 @@ impl<T: Ring> std::ops::Add<Polynomial<T>> for Polynomial<T> {
             rhs.add(self)
         } else {
             for (i, x) in rhs.a.into_iter().enumerate() {
-                self.a[i] += x;
+                self.a[i].add_assign_with_ref(&x);
             }
             self
         }
@@ -142,7 +142,7 @@ impl<T: Ring> std::ops::AddAssign for Polynomial<T> {
         }
         for (i, x) in rhs.a.into_iter().enumerate() {
             if i < my_len {
-                self.a[i] += x;
+                self.a[i].add_assign_with_ref(&x);
             } else {
                 self.a.push(x);
             }
@@ -319,7 +319,8 @@ impl<T: Ring> MulWithRef for Polynomial<T> {
         let mut a = vec![T::zero(); self.a.len() + rhs.a.len() - 1];
         for i in 0..self.a.len() {
             for j in 0..rhs.a.len() {
-                a[i + j] += self.a[i].mul_with_ref(&rhs.a[j]);
+                let prod = self.a[i].mul_with_ref(&rhs.a[j]);
+                a[i + j].add_assign_with_ref(&prod);
             }
         }
         Self::from_coefficients(a)

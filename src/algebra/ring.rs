@@ -1,6 +1,5 @@
 use super::ops_with_ref::*;
 use std::cmp::PartialEq;
-use std::ops::{Add, AddAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
 /// Trait providing a zero element of an additive algebraic structure (like a group, a ring or a vector space).
 pub trait Zero {
@@ -91,21 +90,7 @@ impl<T: From<i8>> One for T {
 /// (Please convince yourself by looking considering matrices or polynomials
 /// as examples.)
 pub trait Ring:
-    Clone
-    + Zero
-    + One
-    + Add<Output = Self>
-    + AddAssign
-    + AddAssignWithRef
-    + Sub<Output = Self>
-    + SubAssign
-    + SubAssignWithRef
-    + Mul<Output = Self>
-    + MulAssign
-    + MulWithRef
-    + Neg<Output = Self>
-    + NegAssign
-    + PartialEq
+    Clone + Zero + One + AddAssignWithRef + SubAssignWithRef + MulWithRef + NegAssign + PartialEq
 {
 }
 

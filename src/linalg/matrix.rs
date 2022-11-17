@@ -298,8 +298,10 @@ impl<T: SubAssignWithRef, const NUM_ROWS: usize, const NUM_COLS: usize> SubAssig
     }
 }
 
-impl<'a, T: AddAssign + MulWithRef + Zero, const L: usize, const M: usize, const N: usize>
-    Mul<&'a SMatrix<T, M, N>> for &'a SMatrix<T, L, M>
+impl<'a, T, const L: usize, const M: usize, const N: usize> Mul<&'a SMatrix<T, M, N>>
+    for &'a SMatrix<T, L, M>
+where
+    T: AddAssignWithRef + MulWithRef + Zero,
 {
     type Output = SMatrix<T, L, N>;
 
@@ -320,7 +322,8 @@ impl<'a, T: AddAssign + MulWithRef + Zero, const L: usize, const M: usize, const
             let row = [(); N].map(|_| {
                 let mut sum = T::zero();
                 for m in 0..M {
-                    sum += self.0[l][m].mul_with_ref(&other.0[m][n]);
+                    let prod = self.0[l][m].mul_with_ref(&other.0[m][n]);
+                    sum.add_assign_with_ref(&prod);
                 }
                 n += 1;
                 sum
@@ -331,7 +334,7 @@ impl<'a, T: AddAssign + MulWithRef + Zero, const L: usize, const M: usize, const
     }
 }
 
-impl<T: AddAssign + MulWithRef + Zero, const L: usize, const M: usize, const N: usize>
+impl<T: AddAssignWithRef + MulWithRef + Zero, const L: usize, const M: usize, const N: usize>
     Mul<SMatrix<T, M, N>> for SMatrix<T, L, M>
 {
     type Output = SMatrix<T, L, N>;
@@ -393,7 +396,7 @@ where
     }
 }
 
-impl<T: AddAssign + MulWithRef + Zero, const N: usize> MulWithRef for SMatrix<T, N, N> {
+impl<T: AddAssignWithRef + MulWithRef + Zero, const N: usize> MulWithRef for SMatrix<T, N, N> {
     /// Multiplies two matrices
     ///
     /// # Example
