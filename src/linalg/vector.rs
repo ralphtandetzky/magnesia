@@ -1,4 +1,4 @@
-use crate::algebra::{AddAssignWithRef, MulWithRef, SubAssignWithRef, Zero};
+use crate::algebra::{MulRefs, Zero};
 use std::ops::{Add, AddAssign, Mul, MulAssign, Sub, SubAssign};
 
 /// Statically sized mathematical vector.
@@ -35,7 +35,7 @@ impl<T, const DIM: usize> From<[T; DIM]> for SVector<T, DIM> {
 
 impl<T, const DIM: usize> Add for SVector<T, DIM>
 where
-    Self: AddAssignWithRef,
+    for<'a> T: AddAssign<&'a T>,
 {
     type Output = Self;
 
@@ -50,14 +50,14 @@ where
     /// assert_eq!(w, SVector::from([4,6]));
     /// ```
     fn add(mut self, other: Self) -> Self {
-        self.add_assign_with_ref(&other);
+        self += &other;
         self
     }
 }
 
 impl<T, const DIM: usize> Add<&Self> for SVector<T, DIM>
 where
-    Self: AddAssignWithRef,
+    for<'a> T: AddAssign<&'a T>,
 {
     type Output = Self;
 
@@ -72,14 +72,14 @@ where
     /// assert_eq!(w, SVector::from([4,6]));
     /// ```
     fn add(mut self, other: &Self) -> Self {
-        self.add_assign_with_ref(other);
+        self += other;
         self
     }
 }
 
 impl<T, const DIM: usize> AddAssign<Self> for SVector<T, DIM>
 where
-    Self: AddAssignWithRef,
+    for<'a> T: AddAssign<&'a T>,
 {
     /// Implements the `+=` operator for `SVector`.
     ///
@@ -92,13 +92,13 @@ where
     /// assert_eq!(u, SVector::from([4,6]));
     /// ```
     fn add_assign(&mut self, other: Self) {
-        self.add_assign_with_ref(&other);
+        *self += &other;
     }
 }
 
 impl<T, const DIM: usize> AddAssign<&Self> for SVector<T, DIM>
 where
-    Self: AddAssignWithRef,
+    for<'a> T: AddAssign<&'a T>,
 {
     /// Implements the `+=` operator for `&SVector`.
     ///
@@ -111,41 +111,15 @@ where
     /// assert_eq!(u, SVector::from([4,6]));
     /// ```
     fn add_assign(&mut self, other: &Self) {
-        self.add_assign_with_ref(other);
-    }
-}
-
-impl<T: AddAssignWithRef, const DIM: usize> AddAssignWithRef for SVector<T, DIM> {
-    /// Implements the [`AddAssignWithRef`] operator for `SVector`.
-    ///
-    /// It is recommended to instead use the `+=` operator with references:
-    /// ```
-    /// # use magnesia::linalg::SVector;
-    /// let mut u = SVector::from([1,2]);
-    /// let v = SVector::from([3,4]);
-    /// u += &v;
-    /// assert_eq!(u, SVector::from([4,6]));
-    /// ```
-    ///
-    /// # Example
-    /// ```
-    /// # use magnesia::linalg::SVector;
-    /// # use magnesia::algebra::AddAssignWithRef;
-    /// let mut u = SVector::from([1,2]);
-    /// let v = SVector::from([3,4]);
-    /// u.add_assign_with_ref(&v);
-    /// assert_eq!(u, SVector::from([4,6]));
-    /// ```
-    fn add_assign_with_ref(&mut self, other: &Self) {
         for (s, o) in self.0.iter_mut().zip(other.0.iter()) {
-            s.add_assign_with_ref(o);
+            *s += o;
         }
     }
 }
 
 impl<T, const DIM: usize> Sub for SVector<T, DIM>
 where
-    Self: SubAssignWithRef,
+    for<'a> T: SubAssign<&'a T>,
 {
     type Output = Self;
 
@@ -160,14 +134,14 @@ where
     /// assert_eq!(w, SVector::from([1,2]));
     /// ```
     fn sub(mut self, other: Self) -> Self {
-        self.sub_assign_with_ref(&other);
+        self -= &other;
         self
     }
 }
 
 impl<T, const DIM: usize> Sub<&Self> for SVector<T, DIM>
 where
-    Self: SubAssignWithRef,
+    for<'a> T: SubAssign<&'a T>,
 {
     type Output = Self;
 
@@ -182,14 +156,14 @@ where
     /// assert_eq!(w, SVector::from([1,2]));
     /// ```
     fn sub(mut self, other: &Self) -> Self {
-        self.sub_assign_with_ref(other);
+        self -= other;
         self
     }
 }
 
 impl<T, const DIM: usize> SubAssign<Self> for SVector<T, DIM>
 where
-    Self: SubAssignWithRef,
+    for<'a> T: SubAssign<&'a T>,
 {
     /// Implements the `-=` operator for `SVector`.
     ///
@@ -202,13 +176,13 @@ where
     /// assert_eq!(u, SVector::from([1,2]));
     /// ```
     fn sub_assign(&mut self, other: Self) {
-        self.sub_assign_with_ref(&other);
+        *self -= &other;
     }
 }
 
 impl<T, const DIM: usize> SubAssign<&Self> for SVector<T, DIM>
 where
-    Self: SubAssignWithRef,
+    for<'a> T: SubAssign<&'a T>,
 {
     /// Implements the `-=` operator for `&SVector`.
     ///
@@ -221,34 +195,8 @@ where
     /// assert_eq!(u, SVector::from([1,2]));
     /// ```
     fn sub_assign(&mut self, other: &Self) {
-        self.sub_assign_with_ref(other);
-    }
-}
-
-impl<T: SubAssignWithRef, const DIM: usize> SubAssignWithRef for SVector<T, DIM> {
-    /// Implements the [`SubAssignWithRef`] operator for `SVector`.
-    ///
-    /// It is recommended to instead use the `-=` operator with references:
-    /// ```
-    /// # use magnesia::linalg::SVector;
-    /// let mut u = SVector::from([4,6]);
-    /// let v = SVector::from([3,4]);
-    /// u -= &v;
-    /// assert_eq!(u, SVector::from([1,2]));
-    /// ```
-    ///
-    /// # Example
-    /// ```
-    /// # use magnesia::linalg::SVector;
-    /// # use magnesia::algebra::SubAssignWithRef;
-    /// let mut u = SVector::from([4,6]);
-    /// let v = SVector::from([3,4]);
-    /// u.sub_assign_with_ref(&v);
-    /// assert_eq!(u, SVector::from([1,2]));
-    /// ```
-    fn sub_assign_with_ref(&mut self, other: &Self) {
         for (s, o) in self.0.iter_mut().zip(other.0.iter()) {
-            s.sub_assign_with_ref(o);
+            *s -= o;
         }
     }
 }
@@ -274,7 +222,10 @@ where
     }
 }
 
-impl<T: Zero + MulWithRef + AddAssignWithRef, const DIM: usize> Mul<&Self> for SVector<T, DIM> {
+impl<T, const DIM: usize> Mul<&Self> for SVector<T, DIM>
+where
+    for<'a> T: MulRefs + AddAssign<&'a T> + Zero,
+{
     type Output = T;
 
     /// Implements the dot product of two vectors.
@@ -290,14 +241,17 @@ impl<T: Zero + MulWithRef + AddAssignWithRef, const DIM: usize> Mul<&Self> for S
     fn mul(self, other: &Self) -> Self::Output {
         let mut sum = T::zero();
         for (l, r) in self.0.iter().zip(other.0.iter()) {
-            let prod = l.mul_with_ref(r);
-            sum.add_assign_with_ref(&prod);
+            let prod = l.mul_refs(r);
+            sum += &prod;
         }
         sum
     }
 }
 
-impl<T: MulWithRef, const DIM: usize> Mul<T> for SVector<T, DIM> {
+impl<T, const DIM: usize> Mul<T> for SVector<T, DIM>
+where
+    T: MulRefs,
+{
     type Output = Self;
 
     /// Multiplies a vector with a scalar.
@@ -314,7 +268,10 @@ impl<T: MulWithRef, const DIM: usize> Mul<T> for SVector<T, DIM> {
     }
 }
 
-impl<T: MulWithRef, const DIM: usize> Mul<&T> for SVector<T, DIM> {
+impl<T, const DIM: usize> Mul<&T> for SVector<T, DIM>
+where
+    T: MulRefs,
+{
     type Output = Self;
 
     /// Multiplies a vector with a scalar.
@@ -332,7 +289,10 @@ impl<T: MulWithRef, const DIM: usize> Mul<&T> for SVector<T, DIM> {
     }
 }
 
-impl<T: MulWithRef, const DIM: usize> MulAssign<T> for SVector<T, DIM> {
+impl<T, const DIM: usize> MulAssign<T> for SVector<T, DIM>
+where
+    T: MulRefs,
+{
     /// Multiplies a vector with a scalar in-place.
     ///
     /// # Example
@@ -347,7 +307,10 @@ impl<T: MulWithRef, const DIM: usize> MulAssign<T> for SVector<T, DIM> {
     }
 }
 
-impl<T: MulWithRef, const DIM: usize> MulAssign<&T> for SVector<T, DIM> {
+impl<T, const DIM: usize> MulAssign<&T> for SVector<T, DIM>
+where
+    T: MulRefs,
+{
     /// Multiplies a vector with a scalar in-place.
     ///
     /// # Example
@@ -359,7 +322,7 @@ impl<T: MulWithRef, const DIM: usize> MulAssign<&T> for SVector<T, DIM> {
     /// ```
     fn mul_assign(&mut self, other: &T) {
         for x in self {
-            let a = x.mul_with_ref(other);
+            let a = x.mul_refs(other);
             *x = a;
         }
     }

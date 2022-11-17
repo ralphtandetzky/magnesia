@@ -1,4 +1,4 @@
-use super::{ops_with_ref::DivWithRef, Ring};
+use super::{ops_with_ref::DivRefs, Ring};
 
 /// A trait for data structures modeling an algebraic
 /// [field](https://en.wikipedia.org/wiki/Field_(mathematics)).
@@ -13,7 +13,7 @@ use super::{ops_with_ref::DivWithRef, Ring};
 /// The comments there also apply here.
 ///
 /// See also: [`Ring`], [`Complex`](super::Complex)
-pub trait Field: Ring + DivWithRef {}
+pub trait Field: Ring + DivRefs {}
 
 impl Field for f32 {}
 impl Field for f64 {}

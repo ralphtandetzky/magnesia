@@ -1,5 +1,9 @@
-use super::ops_with_ref::*;
-use std::cmp::PartialEq;
+use std::{
+    cmp::PartialEq,
+    ops::{AddAssign, Neg, SubAssign},
+};
+
+use super::ops_with_ref::MulRefs;
 
 /// Trait providing a zero element of an additive algebraic structure
 /// (like a group, a ring or a vector space).
@@ -103,8 +107,16 @@ impl<T: From<i8>> One for T {
 ///
 /// See also: [`Field`](super::Field), [`Polynomial`](super::Polynomial),
 /// [`SMatrix`](crate::linalg::SMatrix)
-pub trait Ring:
-    Clone + Zero + One + AddAssignWithRef + SubAssignWithRef + MulWithRef + NegAssign + PartialEq
+pub trait Ring
+where
+    for<'a> Self: Clone
+        + Zero
+        + One
+        + AddAssign<&'a Self>
+        + SubAssign<&'a Self>
+        + MulRefs
+        + Neg<Output = Self>
+        + PartialEq,
 {
 }
 

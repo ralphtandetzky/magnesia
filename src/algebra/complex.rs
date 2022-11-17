@@ -1,7 +1,4 @@
-use super::{
-    conj::ConjAssign, ops_with_ref::DivWithRef, AddAssignWithRef, Field, MulWithRef, NegAssign,
-    One, Ring, Sqrt, SubAssignWithRef, Zero,
-};
+use super::{conj::Conj, Field, MulRefs, One, Ring, Sqrt, Zero};
 use std::ops::{Add, AddAssign, Div, Mul, MulAssign, Neg, Sub, SubAssign};
 
 /// Complex numbers consisting of real and imaginary part.
@@ -27,22 +24,28 @@ impl<T> Complex<T> {
     }
 }
 
-impl<T: NegAssign> ConjAssign for Complex<T> {
+impl<T> Conj for Complex<T>
+where
+    T: Neg<Output = T>,
+{
     /// Computes the complex conjugate of a complex number.
     ///
     /// # Example
     /// ```
     /// # use::magnesia::algebra::Complex;
-    /// let mut z = Complex::new(1.0, 2.0);
-    /// z.conj_assign();
-    /// assert_eq!(z, Complex::new(1.0, -2.0));
+    /// # use::magnesia::algebra::Conj;
+    /// let z = Complex::new(1.0, 2.0);
+    /// assert_eq!(z.conj(), Complex::new(1.0, -2.0));
     /// ```
-    fn conj_assign(&mut self) {
-        self.im.neg_assign();
+    fn conj(self) -> Self {
+        Self::new(self.re, -self.im)
     }
 }
 
-impl<T: AddAssignWithRef + MulWithRef> Complex<T> {
+impl<T> Complex<T>
+where
+    for<'a> T: AddAssign<&'a T> + MulRefs,
+{
     /// Computes the square of the absolute value of a complex number.
     ///
     /// # Example
@@ -53,15 +56,29 @@ impl<T: AddAssignWithRef + MulWithRef> Complex<T> {
     /// assert_eq!(a, 5);
     /// ```
     pub fn sqr_norm(&self) -> T {
-        let mut p1 = self.re.mul_with_ref(&self.re);
-        let p2 = self.im.mul_with_ref(&self.im);
-        p1.add_assign_with_ref(&p2);
+        let mut p1 = self.re.mul_refs(&self.re);
+        let p2 = self.im.mul_refs(&self.im);
+        p1 += &p2;
         p1
     }
 }
 
-impl<T: AddAssignWithRef + MulWithRef + Sqrt> Complex<T> {
+impl<T> Complex<T>
+where
+    for<'a> T: AddAssign<&'a T> + MulRefs + Sqrt,
+{
     /// Computes the absolute value of a complex number.
+    ///
+    /// # Note on Accuracy
+    ///
+    /// If the result squared evaluates to infinity or zero in the range of
+    /// the type `T`, then the result may overflow to infinity or underflow
+    /// to zero respectively.
+    /// Concretely, for `f32` values above `1.844674353e19` may be rounded up
+    /// to infinity and values below `1.084202172e-19` may be rounded down to
+    /// zero.
+    /// For `f64` values above `1.340780793e152` may be rounded up to infinity
+    /// and values below `1.491668146e-152` may be rounded down to zero.
     ///
     /// # Example
     /// ```
@@ -142,21 +159,23 @@ impl<T: AddAssign<U>, U> AddAssign<Complex<U>> for Complex<T> {
     }
 }
 
-impl<T: AddAssignWithRef> AddAssignWithRef for Complex<T> {
+impl<T> AddAssign<&Complex<T>> for Complex<T>
+where
+    for<'a> T: AddAssign<&'a T>,
+{
     /// Adds two complex numbers in-place.
     ///
     /// # Example
     /// ```
     /// # use magnesia::algebra::Complex;
-    /// # use crate::magnesia::algebra::AddAssignWithRef;
     /// let mut a = Complex::new(1, 2);
     /// let b = Complex::new(3, 4);
-    /// a.add_assign_with_ref(&b);
+    /// a += &b;
     /// assert_eq!(a, Complex::new(4,6));
     /// ```
-    fn add_assign_with_ref(&mut self, other: &Self) {
-        self.re.add_assign_with_ref(&other.re);
-        self.im.add_assign_with_ref(&other.im);
+    fn add_assign(&mut self, other: &Self) {
+        self.re += &other.re;
+        self.im += &other.im;
     }
 }
 
@@ -195,25 +214,30 @@ impl<T: SubAssign<U>, U> SubAssign<Complex<U>> for Complex<T> {
     }
 }
 
-impl<T: SubAssignWithRef> SubAssignWithRef for Complex<T> {
+impl<T> SubAssign<&Self> for Complex<T>
+where
+    for<'a> T: SubAssign<&'a T>,
+{
     /// Subtracts two complex numbers in-place.
     ///
     /// # Example
     /// ```
     /// # use magnesia::algebra::Complex;
-    /// # use crate::magnesia::algebra::SubAssignWithRef;
     /// let mut a = Complex::new(1, 2);
     /// let b = Complex::new(3, 4);
-    /// a.sub_assign_with_ref(&b);
+    /// a -= &b;
     /// assert_eq!(a, Complex::new(-2,-2));
     /// ```
-    fn sub_assign_with_ref(&mut self, other: &Self) {
-        self.re.sub_assign_with_ref(&other.re);
-        self.im.sub_assign_with_ref(&other.im);
+    fn sub_assign(&mut self, other: &Self) {
+        self.re -= &other.re;
+        self.im -= &other.im;
     }
 }
 
-impl<T: MulWithRef + AddAssignWithRef + SubAssignWithRef> Mul for Complex<T> {
+impl<T> Mul for Complex<T>
+where
+    T: Ring,
+{
     type Output = Self;
 
     /// Implements the `*` operator for complex numbers.
@@ -226,11 +250,11 @@ impl<T: MulWithRef + AddAssignWithRef + SubAssignWithRef> Mul for Complex<T> {
     /// assert_eq!(b, Complex::new(-3, 4));
     /// ```
     fn mul(self, other: Self) -> Self::Output {
-        self.mul_with_ref(&other)
+        &self * &other
     }
 }
 
-impl<T: MulWithRef + AddAssignWithRef + SubAssignWithRef> MulAssign for Complex<T> {
+impl<T: Ring> MulAssign for Complex<T> {
     /// Implements the `*=` operator for complex numbers.
     ///
     /// # Example
@@ -241,61 +265,63 @@ impl<T: MulWithRef + AddAssignWithRef + SubAssignWithRef> MulAssign for Complex<
     /// assert_eq!(a, Complex::new(-3, 4));
     /// ```
     fn mul_assign(&mut self, rhs: Self) {
-        let prod = self.mul_with_ref(&rhs);
+        let s: &_ = self;
+        let prod = s * &rhs;
         *self = prod;
     }
 }
 
-impl<T: MulWithRef + AddAssignWithRef + SubAssignWithRef> MulWithRef for Complex<T> {
+impl<'a, T> Mul<&'a Complex<T>> for &'a Complex<T>
+where
+    T: Ring,
+{
+    type Output = Complex<T>;
     /// Implements multiplication of complex numbers by refernce.
     ///
     /// # Example
     /// ```
     /// # use::magnesia::algebra::Complex;
-    /// # use::magnesia::algebra::MulWithRef;
     /// let a = Complex::new(1, 2);
-    /// let b = a.mul_with_ref(&a);
+    /// let b = &a * &a;
     /// assert_eq!(b, Complex::new(-3, 4));
     /// ```
-    fn mul_with_ref(&self, other: &Self) -> Self {
-        let mut p1 = self.re.mul_with_ref(&other.re);
-        let mut p2 = self.re.mul_with_ref(&other.im);
-        let p3 = self.im.mul_with_ref(&other.re);
-        let p4 = self.im.mul_with_ref(&other.im);
-        p1.sub_assign_with_ref(&p4);
-        p2.add_assign_with_ref(&p3);
+    fn mul(self, other: &'a Complex<T>) -> Complex<T> {
+        let mut p1 = self.re.mul_refs(&other.re);
+        let mut p2 = self.re.mul_refs(&other.im);
+        let p3 = self.im.mul_refs(&other.re);
+        let p4 = self.im.mul_refs(&other.im);
+        p1 -= &p4;
+        p2 += &p3;
         Complex::new(p1, p2)
     }
 }
 
-impl<T> DivWithRef for Complex<T>
+impl<T> Div<Self> for &Complex<T>
 where
     T: Field,
 {
+    type Output = Complex<T>;
+
     /// Implements division with references for `Complex<T>`.
     ///
     /// # Example
     /// ```
     /// # use magnesia::algebra::Complex;
-    /// # use magnesia::algebra::DivWithRef;
     /// let a = Complex::new(1.0f32,2.0f32);
     /// let b = Complex::new(1.0f32,1.0f32);
     /// let c = a * b;
-    /// let d = c.div_with_ref(&b);
+    /// let d = &c / &b;
     /// assert_eq!(d, a);
     /// ```
-    fn div_with_ref(&self, other: &Self) -> Self {
-        let rcp_sqr_norm = T::one().div_with_ref(&other.sqr_norm());
-        let mut p1 = self.re.mul_with_ref(&other.re);
-        let mut p2 = self.im.mul_with_ref(&other.re);
-        let p3 = self.re.mul_with_ref(&other.im);
-        let p4 = self.im.mul_with_ref(&other.im);
-        p1.add_assign_with_ref(&p4);
-        p2.sub_assign_with_ref(&p3);
-        Complex::new(
-            p1.mul_with_ref(&rcp_sqr_norm),
-            p2.mul_with_ref(&rcp_sqr_norm),
-        )
+    fn div(self, other: Self) -> Self::Output {
+        let rcp_sqr_norm = T::one().div_refs(&other.sqr_norm());
+        let mut p1 = self.re.mul_refs(&other.re);
+        let mut p2 = self.im.mul_refs(&other.re);
+        let p3 = self.re.mul_refs(&other.im);
+        let p4 = self.im.mul_refs(&other.im);
+        p1 += &p4;
+        p2 -= &p3;
+        Complex::new(p1.mul_refs(&rcp_sqr_norm), p2.mul_refs(&rcp_sqr_norm))
     }
 }
 
@@ -305,73 +331,32 @@ where
 {
     type Output = Self;
 
-    /// Implements the `/` for complex numbers.
-    ///
-    /// # Example
-    /// ```
-    /// # use magnesia::algebra::Complex;
-    /// let a = Complex::new(1.0f32,2.0f32);
-    /// let b = Complex::new(1.0f32,1.0f32);
-    /// let c = a * b / b;
-    /// assert_eq!(c, a);
-    /// ```
     fn div(self, other: Self) -> Self {
-        self.div_with_ref(&other)
+        &self / &other
     }
 }
 
-impl<T> Div for &Complex<T>
-where
-    T: Field,
-{
-    type Output = Complex<T>;
-
-    /// Implements the `/` for complex numbers.
-    ///
-    /// # Example
-    /// ```
-    /// # use magnesia::algebra::Complex;
-    /// let a = Complex::new(1.0f32,2.0f32);
-    /// let b = Complex::new(1.0f32,1.0f32);
-    /// let c = &(a * b) / &b;
-    /// assert_eq!(c, a);
-    /// ```
-    fn div(self, other: &Complex<T>) -> Self::Output {
-        self.div_with_ref(other)
-    }
+#[test]
+fn test_div_complex_f32() {
+    let a = Complex::new(1.0f32, 2.0f32);
+    let b = Complex::new(1.0f32, 1.0f32);
+    let c = a * b / b;
+    assert_eq!(c, a);
 }
 
 impl<T: Neg<Output = T>> Neg for Complex<T> {
     type Output = Self;
 
-    /// Implements the unary `-` operator for complex numbers.
-    ///
-    /// # Example
-    /// ```
-    /// # use magnesia::algebra::Complex;
-    /// let a = Complex::new(1, 2);
-    /// let b = -a;
-    /// assert_eq!(b, Complex::new(-1, -2));
-    /// ```
-    fn neg(self) -> Self {
-        Self::new(-self.re, -self.im)
-    }
-}
-
-impl<T: NegAssign> NegAssign for Complex<T> {
     /// Implements the NegAssign trait for complex numbers.
     ///
     /// # Example
     /// ```
     /// # use magnesia::algebra::Complex;
-    /// # use magnesia::algebra::NegAssign;
-    /// let mut a = Complex::new(1, 2);
-    /// a.neg_assign();
-    /// assert_eq!(a, Complex::new(-1, -2));
+    /// let a = Complex::new(1, 2);
+    /// assert_eq!(-a, Complex::new(-1, -2));
     /// ```
-    fn neg_assign(&mut self) {
-        self.re.neg_assign();
-        self.im.neg_assign();
+    fn neg(self) -> Self {
+        Complex::new(-self.re, -self.im)
     }
 }
 
