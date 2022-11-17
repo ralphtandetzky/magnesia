@@ -2,6 +2,7 @@
 //!
 //!   * Polynomials
 //!   * Vectors and Matrices
+//!   * Complex Numbers
 //!
 //! # Goal and Scope
 //!
@@ -13,15 +14,15 @@
 //!
 //! In the future the package shall contain the following features as well:
 //!
-//!   * Complex numbers and Quaternions
+//!   * Quaternions
 //!   * Big Integers
 //!   * Fast Fourier Transform
-//!   * Symbolic and numerical differentiation
+//!   * Symbolic and Numerical Differentiation
 //!   * Numerical Optimization
-//!   * Root finding
+//!   * Root Rinding
 //!   * Interpolation
-//!   * Integration and solving differential equations
-//!   * Geometrical primitives
+//!   * Integration and Solving Differential Equations
+//!   * Geometrical Primitives
 //!   * etc.
 //!
 //! Contributions for this cause are highly welcome!
@@ -33,14 +34,14 @@
 /// This includes the following:
 ///
 ///   * Polynomials
+///   * Complex Numbers
 ///   * Rings (as trait)
 ///   * Some helper traits
 ///
 /// In the future, this module may also include the following:
 ///
-///   * Complex Numbers
-///   * Big Integers
 ///   * Quaternions
+///   * Big Integers
 ///   * Fractions
 ///   * Finite Fields
 ///
