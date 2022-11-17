@@ -116,10 +116,8 @@ impl<T: Ring> std::ops::Add<Polynomial<T>> for Polynomial<T> {
         if self.a.len() < rhs.a.len() {
             rhs.add(self)
         } else {
-            let mut i: usize = 0;
-            for x in rhs.a.into_iter() {
+            for (i, x) in rhs.a.into_iter().enumerate() {
                 self.a[i] += x;
-                i += 1;
             }
             self
         }
@@ -139,17 +137,15 @@ impl<T: Ring> std::ops::AddAssign for Polynomial<T> {
     /// ```
     fn add_assign(&mut self, rhs: Self) {
         let my_len = self.a.len();
-        let mut i: usize = 0;
         if self.a.len() < rhs.a.len() {
             self.a.reserve(rhs.a.len() - self.a.len());
         }
-        for x in rhs.a.into_iter() {
+        for (i, x) in rhs.a.into_iter().enumerate() {
             if i < my_len {
                 self.a[i] += x;
             } else {
                 self.a.push(x);
             }
-            i += 1;
         }
     }
 }
@@ -317,7 +313,7 @@ impl<T: Ring> MulWithRef for Polynomial<T> {
     /// assert_eq!(r, Polynomial::from_coefficients(vec![0, 1, 2, 3]));
     /// ```
     fn mul_with_ref(&self, rhs: &Self) -> Self {
-        if self.a.len() == 0 || rhs.a.len() == 0 {
+        if self.a.is_empty() || rhs.a.is_empty() {
             return Self::zero();
         }
         let mut a = vec![T::zero(); self.a.len() + rhs.a.len() - 1];
