@@ -27,5 +27,35 @@
 //!
 //! Contributions for this cause are highly welcome!
 
+/// This module provides facilities from abstract algebra.
+///
+/// This includes the following:
+///
+///   * Polynomials
+///   * Rings (as trait)
+///   * Some helper traits
+///
+/// In the future, this module may also include the following:
+///
+///   * Complex Numbers
+///   * Big Integers
+///   * Quaternions
+///   * Fractions
+///   * Finite Fields
+///
+/// Structures belonging to linear algebra can be found in the module
+/// [`algebra`](crate::linalg).
 pub mod algebra;
+
+/// This module provides facilities from linear algebra.
+///
+/// This includes the following:
+///   * Matrices
+///
+/// In the future, this module may also include the following:
+///
+///   * Vectors
+///   * Matrix Decompositions
+///   * Affine Transformations
+///   * Tensors
 pub mod linalg;

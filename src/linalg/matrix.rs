@@ -1,8 +1,18 @@
-use crate::algebra::{AddAssignWithRef, One, SubAssignWithRef, Zero, MulWithRef};
+use crate::algebra::{AddAssignWithRef, MulWithRef, One, SubAssignWithRef, Zero};
 use std::ops::{Add, AddAssign, Mul, Sub, SubAssign};
 
 trait Dimension {}
 
+/// A matrix type with static number of rows and columns.
+///
+/// # Example
+/// ```
+/// # use magnesia::linalg::SMatrix;
+/// let a = SMatrix::from([[0,1,2],[3,4,5]]);
+/// let b = SMatrix::from([[1,1,1],[1,1,1]]);
+/// let c = a + b;
+/// assert_eq!(c, SMatrix::from([[1,2,3],[4,5,6]]));
+/// ```
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub struct SMatrix<T, const NUM_ROWS: usize, const NUM_COLS: usize>([[T; NUM_COLS]; NUM_ROWS]);
 
