@@ -34,6 +34,10 @@ Add this to your `Cargo.toml`:
 magnesia = "0.2.1"
 ```
 
+## Documentation
+
+Please find the reference documentation [here on docs.rs](https://docs.rs/magnesia/latest/magnesia/).
+
 ## Contributing
 
 Contributions are highly welcome. To do so, please send me a pull request via github. It doesn't have to be perfect at first, but expect feedback and change requests before merges into the main repository.
