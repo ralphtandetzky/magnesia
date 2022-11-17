@@ -1,4 +1,4 @@
-use std::ops::{AddAssign, Mul, Neg, SubAssign};
+use std::ops::{AddAssign, Div, Mul, Neg, SubAssign};
 
 /// This trait allows zero overhead implementation of the `+=` operator by
 /// taking operands by reference.
@@ -20,14 +20,24 @@ pub trait SubAssignWithRef {
     fn sub_assign_with_ref(&mut self, rhs: &Self);
 }
 
-/// This trait allows zero overhead implementation of the `+=` operator by
+/// This trait allows zero overhead implementation of the `*` operator by
 /// taking operands by reference.
 ///
 /// See the documentation of [`Ring`](crate::algebra::Ring) for a detailed
 /// explanation on the design rationale.
 pub trait MulWithRef {
-    /// Multiplies `*self` and `*rhs`.
+    /// Multiplies `*self` by `*rhs`.
     fn mul_with_ref(&self, rhs: &Self) -> Self;
+}
+
+/// This trait allows zero overhead implementation of the `/` operator by
+/// taking operands by reference.
+///
+/// See the documentation of [`Ring`](crate::algebra::Ring) for a detailed
+/// explanation on the design rationale.
+pub trait DivWithRef {
+    /// Divides `*self` by `*rhs`.
+    fn div_with_ref(&self, rhs: &Self) -> Self;
 }
 
 /// This trait allows zero overhead implementation of the unary `-` operator
@@ -40,40 +50,65 @@ pub trait NegAssign {
     fn neg_assign(&mut self);
 }
 
-trait AutoImplementRingOpsWithRef:
-    Copy + AddAssign<Self> + SubAssign<Self> + Mul<Self, Output = Self> + Neg<Output = Self>
-{
-}
+/// Marker trait which causes the reference operator traits such as
+/// [`AddAssignWithRef`] to be implemented automatically.
+///
+/// Please mark your types for which you would like the reference operator
+/// traits to be implemented automatically with this trait.
+/// For some types this is undesired, so the automatic implementation is
+/// predicated on this trait.
+pub trait AutoImplementOpsWithRef {}
 
-impl<T: AutoImplementRingOpsWithRef> AddAssignWithRef for T {
+impl<T> AddAssignWithRef for T
+where
+    T: AutoImplementOpsWithRef + AddAssign<T> + Copy,
+{
     fn add_assign_with_ref(&mut self, rhs: &Self) {
         *self += *rhs;
     }
 }
 
-impl<T: AutoImplementRingOpsWithRef> SubAssignWithRef for T {
+impl<T> SubAssignWithRef for T
+where
+    T: AutoImplementOpsWithRef + SubAssign<T> + Copy,
+{
     fn sub_assign_with_ref(&mut self, rhs: &Self) {
         *self -= *rhs;
     }
 }
 
-impl<T: AutoImplementRingOpsWithRef> MulWithRef for T {
+impl<T> MulWithRef for T
+where
+    T: AutoImplementOpsWithRef + Mul<T, Output = T> + Copy,
+{
     fn mul_with_ref(&self, rhs: &Self) -> Self {
         *self * *rhs
     }
 }
 
-impl<T: AutoImplementRingOpsWithRef> NegAssign for T {
+impl<T> DivWithRef for T
+where
+    T: AutoImplementOpsWithRef + Div<T, Output = T> + Copy,
+{
+    fn div_with_ref(&self, rhs: &Self) -> Self {
+        *self / *rhs
+    }
+}
+
+impl<T> NegAssign for T
+where
+    T: AutoImplementOpsWithRef + Neg<Output = T> + Copy,
+{
     fn neg_assign(&mut self) {
         *self = -*self;
     }
 }
 
-impl AutoImplementRingOpsWithRef for i8 {}
-impl AutoImplementRingOpsWithRef for i16 {}
-impl AutoImplementRingOpsWithRef for i32 {}
-impl AutoImplementRingOpsWithRef for i64 {}
-impl AutoImplementRingOpsWithRef for i128 {}
-impl AutoImplementRingOpsWithRef for isize {}
-impl AutoImplementRingOpsWithRef for f32 {}
-impl AutoImplementRingOpsWithRef for f64 {}
+impl AutoImplementOpsWithRef for i8 {}
+impl AutoImplementOpsWithRef for i16 {}
+impl AutoImplementOpsWithRef for i32 {}
+impl AutoImplementOpsWithRef for i64 {}
+impl AutoImplementOpsWithRef for i128 {}
+impl AutoImplementOpsWithRef for isize {}
+impl AutoImplementOpsWithRef for f32 {}
+impl AutoImplementOpsWithRef for f64 {}
