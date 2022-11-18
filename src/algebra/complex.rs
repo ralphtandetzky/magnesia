@@ -380,7 +380,16 @@ where
 {
     fn sin(self) -> Self {
         let re = self.re.clone().sin().mul_refs(&self.im.clone().cosh());
-        let im = self.re.cosh().mul_refs(&self.im.sin());
+        let im = self.re.cos().mul_refs(&self.im.sinh());
         Self::new(re, im)
     }
+}
+
+#[test]
+fn test_sin_complex_f32() {
+    let i = Complex::new(0f32, 1f32);
+    let z = Complex::new(0.3f32, -1.2f32);
+    let a = z.sin();
+    let b = ((i * z).exp() - (-i * z).exp()) / (i * 2f32);
+    assert!((a - b).abs() <= z.abs().exp() * 2f32 * f32::EPSILON);
 }
