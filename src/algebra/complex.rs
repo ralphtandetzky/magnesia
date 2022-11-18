@@ -235,6 +235,17 @@ fn test_mul_for_complex_ints() {
     assert_eq!(b, Complex::new(-3, 4));
 }
 
+impl<T> Mul<T> for Complex<T>
+where
+    T: MulRefs,
+{
+    type Output = Self;
+
+    fn mul(self, other: T) -> Self::Output {
+        Complex::new(self.re.mul_refs(&other), self.im.mul_refs(&other))
+    }
+}
+
 impl<T: Ring> MulAssign for Complex<T> {
     fn mul_assign(&mut self, rhs: Self) {
         let s: &_ = self;
