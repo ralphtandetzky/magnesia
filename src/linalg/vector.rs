@@ -238,6 +238,7 @@ where
     /// let x = u * &v;
     /// assert_eq!(x, 1 * 3 + 2 * 4);
     /// ```
+    #[allow(clippy::suspicious_arithmetic_impl)]
     fn mul(self, other: &Self) -> Self::Output {
         let mut sum = T::zero();
         for (l, r) in self.0.iter().zip(other.0.iter()) {

@@ -279,6 +279,7 @@ where
 }
 
 #[test]
+#[allow(clippy::op_ref)]
 fn test_mul_for_ref_complex_int() {
     let a = Complex::new(1, 2);
     let b = &a * &a;
@@ -304,6 +305,7 @@ where
 }
 
 #[test]
+#[allow(clippy::op_ref)]
 fn test_div_for_ref_complex_f32() {
     let a = Complex::new(1.0f32, 2.0f32);
     let b = Complex::new(1.0f32, 1.0f32);
