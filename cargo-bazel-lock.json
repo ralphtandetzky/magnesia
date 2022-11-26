@@ -1,0 +1,38 @@
+{
+  "checksum": "eaa8dc8e6be6a05bda4e620c3b48afa7cf9d8020dfe1394d0c2a480975df88dc",
+  "crates": {
+    "magnesia 0.7.3": {
+      "name": "magnesia",
+      "version": "0.7.3",
+      "repository": null,
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "magnesia",
+            "crate_root": "src/lib.rs",
+            "srcs": {
+              "include": [
+                "**/*.rs"
+              ],
+              "exclude": []
+            }
+          }
+        }
+      ],
+      "library_target_name": "magnesia",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "edition": "2021",
+        "version": "0.7.3"
+      },
+      "license": "MIT"
+    }
+  },
+  "binary_crates": [],
+  "workspace_members": {
+    "magnesia 0.7.3": ""
+  },
+  "conditions": {}
+}

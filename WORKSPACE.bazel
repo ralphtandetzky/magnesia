@@ -1,4 +1,5 @@
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
 http_archive(
     name = "rules_rust",
     sha256 = "324c2a86a8708d30475f324846b35965c432b63a35567ed2b5051b86791ce345",
@@ -9,4 +10,20 @@ load("@rules_rust//rust:repositories.bzl", "rules_rust_dependencies", "rust_regi
 
 rules_rust_dependencies()
 
-rust_register_toolchains(version = "1.65.0", edition="2021")
+rust_register_toolchains(
+    edition = "2021",
+    version = "1.65.0",
+)
+
+load("@rules_rust//crate_universe:defs.bzl", "crates_repository")
+
+crates_repository(
+    name = "crate_index",
+    cargo_lockfile = "//:Cargo.lock",
+    lockfile = "//:cargo-bazel-lock.json",
+    manifests = ["//:Cargo.toml"],
+)
+
+load("@crate_index//:defs.bzl", "crate_repositories")
+
+crate_repositories()
