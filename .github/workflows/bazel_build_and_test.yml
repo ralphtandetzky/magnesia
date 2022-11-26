@@ -14,6 +14,6 @@ jobs:
     - name: Setup Bazel
       uses: bazelbuild/setup-bazelisk@v1.0.1
     - name: Build & Test
-      run: bazel --bazelrc=.bazelrc --bazelrc=/dev/null test //...
+      run: CARGO_BAZEL_REPIN=true bazel --bazelrc=.bazelrc --bazelrc=/dev/null test //...
     - name: Shutdown Bazel
       run: bazel shutdown
