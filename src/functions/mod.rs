@@ -4,8 +4,8 @@ mod exp;
 mod sin;
 mod sinh;
 
-pub use cos::Cos;
-pub use cosh::Cosh;
-pub use exp::Exp;
-pub use sin::Sin;
-pub use sinh::Sinh;
+pub use self::cos::Cos;
+pub use self::cosh::Cosh;
+pub use self::exp::Exp;
+pub use self::sin::Sin;
+pub use self::sinh::Sinh;

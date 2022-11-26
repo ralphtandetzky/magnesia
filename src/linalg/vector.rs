@@ -333,7 +333,7 @@ impl<T, const DIM: usize> IntoIterator for SVector<T, DIM> {
     type IntoIter = <[T; DIM] as IntoIterator>::IntoIter;
 
     fn into_iter(self) -> Self::IntoIter {
-        self.0.into_iter()
+        IntoIterator::into_iter(self.0)
     }
 }
 
