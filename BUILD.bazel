@@ -1,8 +1,13 @@
 load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
 
+package(default_visibility = ["//visibility:public"])
+
 rust_library(
     name = "magnesia",
     srcs = glob(["src/**/*.rs"]),
 )
 
-rust_test(name = "magnesia_test", crate = ":magnesia")
+rust_test(
+    name = "magnesia_test",
+    crate = ":magnesia",
+)
