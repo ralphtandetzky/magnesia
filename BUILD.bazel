@@ -9,5 +9,6 @@ rust_library(
 
 rust_test(
     name = "magnesia_test",
+    size = "small",
     crate = ":magnesia",
 )
