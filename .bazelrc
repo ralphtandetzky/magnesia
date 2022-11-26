@@ -1,0 +1,4 @@
+build:Release -c opt
+build:Debug -c dbg
+test --test_output=errors
+test --test_verbose_timeout_warnings
