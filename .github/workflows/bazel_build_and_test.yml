@@ -1,0 +1,19 @@
+name: Bazel Build & Test
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  build_and_test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Setup Bazel
+      uses: bazelbuild/setup-bazelisk@v1.0.1
+    - name: Build & Test
+      run: bazel --bazelrc=.bazelrc --bazelrc=/dev/null test //...
+    - name: Shutdown Bazel
+      run: bazel shutdown
