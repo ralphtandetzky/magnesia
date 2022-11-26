@@ -1,3 +1,4 @@
 /bazel-*
+/Cargo.Bazel.lock
 /Cargo.lock
 /target
