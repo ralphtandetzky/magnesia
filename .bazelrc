@@ -2,5 +2,7 @@ build:Release -c opt
 build:Debug -c dbg
 build --aspects=@rules_rust//rust:defs.bzl%rust_clippy_aspect
 build --output_groups=+clippy_checks
+build --aspects=@rules_rust//rust:defs.bzl%rustfmt_aspect
+build --output_groups=+rustfmt_checks
 test --test_output=errors
 test --test_verbose_timeout_warnings
