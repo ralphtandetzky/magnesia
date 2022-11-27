@@ -70,30 +70,19 @@ where
 {
     type Output = T;
 
-    /// Computes the absolute value of a complex number.
-    ///
-    /// # Note on Accuracy
-    ///
-    /// If the result squared evaluates to infinity or zero in the range of
-    /// the type `T`, then the result may overflow to infinity or underflow
-    /// to zero respectively.
-    /// Concretely, for `f32` values above `1.844674353e19` may be rounded up
-    /// to infinity and values below `1.084202172e-19` may be rounded down to
-    /// zero.
-    /// For `f64` values above `1.340780793e152` may be rounded up to infinity
-    /// and values below `1.491668146e-152` may be rounded down to zero.
-    ///
-    /// # Example
-    /// ```
-    /// # use magnesia::algebra::Complex;
-    /// # use magnesia::functions::Abs;
-    /// let z = Complex::new(3f32, 4f32);
-    /// let a = z.abs();
-    /// assert_eq!(a, 5f32);
-    /// ```
     fn abs(self) -> Self::Output {
         self.sqr_norm().sqrt()
     }
+}
+
+#[test]
+fn test_abs_complex_f32() {
+    let z = Complex::new(3f32, 4f32);
+    let a = z.abs();
+    assert_eq!(a, 5f32);
+    let z = Complex::new(1f32, -1f32);
+    let a = z.abs();
+    assert_eq!(a, 2f32.sqrt());
 }
 
 impl<T> Complex<T> where T : Atan2 {
