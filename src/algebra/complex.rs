@@ -1,5 +1,5 @@
-use super::{conj::Conj, Field, MulRefs, One, Ring, Sqrt, Zero};
-use crate::functions::{Cos, Cosh, Exp, Sin, Sinh};
+use super::{conj::Conj, Field, MulRefs, One, Ring, Zero};
+use crate::functions::{Abs, Cos, Cosh, Exp, Sin, Sinh, Sqrt};
 use std::ops::{Add, AddAssign, Div, Mul, MulAssign, Neg, Sub, SubAssign};
 
 /// Complex numbers consisting of real and imaginary part.
@@ -64,10 +64,12 @@ where
     }
 }
 
-impl<T> Complex<T>
+impl<T> Abs for Complex<T>
 where
     for<'a> T: AddAssign<&'a T> + MulRefs + Sqrt,
 {
+    type Output = T;
+
     /// Computes the absolute value of a complex number.
     ///
     /// # Note on Accuracy
@@ -84,11 +86,12 @@ where
     /// # Example
     /// ```
     /// # use magnesia::algebra::Complex;
+    /// # use magnesia::functions::Abs;
     /// let z = Complex::new(3f32, 4f32);
     /// let a = z.abs();
     /// assert_eq!(a, 5f32);
     /// ```
-    pub fn abs(&self) -> T {
+    fn abs(self) -> Self::Output {
         self.sqr_norm().sqrt()
     }
 }
