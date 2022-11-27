@@ -1,5 +1,5 @@
 use super::{conj::Conj, Field, MulRefs, One, Ring, Zero};
-use crate::functions::{Abs, Cos, Cosh, Exp, Sin, Sinh, Sqrt};
+use crate::functions::{Abs, Cos, Cosh, Exp, Sin, Sinh, Sqrt, Atan2};
 use std::ops::{Add, AddAssign, Div, Mul, MulAssign, Neg, Sub, SubAssign};
 
 /// Complex numbers consisting of real and imaginary part.
@@ -93,6 +93,24 @@ where
     /// ```
     fn abs(self) -> Self::Output {
         self.sqr_norm().sqrt()
+    }
+}
+
+impl<T> Complex<T> where T : Atan2 {
+    /// Computes the argument (the angle) of a complex number in radians.
+    ///
+    /// The result will lie in the range $[-\pi, \pi]$.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use magnesia::algebra::Complex;
+    /// let z = Complex::new(1f32, 3f32.sqrt());
+    /// let phi = z.arg();
+    /// assert!((phi - std::f32::consts::PI / 3f32).abs() <= f32::EPSILON);
+    /// ```
+    pub fn arg(self) -> T {
+        self.im.atan2(self.re)
     }
 }
 
