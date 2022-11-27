@@ -1,6 +1,6 @@
 [package]
 name = "magnesia"
-version = "0.7.5"
+version = "0.7.6"
 edition = "2021"
 license = "MIT"
 keywords = ["maths"]
