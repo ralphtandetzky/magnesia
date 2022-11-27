@@ -1,4 +1,5 @@
 /bazel-*
 /Cargo.Bazel.lock
+/cargo-bazel-lock.json
 /Cargo.lock
 /target
