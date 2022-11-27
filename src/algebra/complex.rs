@@ -1,5 +1,5 @@
 use super::{conj::Conj, Field, MulRefs, One, Ring, Zero};
-use crate::functions::{Abs, Cos, Cosh, Exp, Sin, Sinh, Sqrt, Atan2};
+use crate::functions::{Abs, Atan2, Cos, Cosh, Exp, Sin, Sinh, Sqrt};
 use std::ops::{Add, AddAssign, Div, Mul, MulAssign, Neg, Sub, SubAssign};
 
 /// Complex numbers consisting of real and imaginary part.
@@ -85,7 +85,10 @@ fn test_abs_complex_f32() {
     assert_eq!(a, 2f32.sqrt());
 }
 
-impl<T> Complex<T> where T : Atan2 {
+impl<T> Complex<T>
+where
+    T: Atan2,
+{
     /// Computes the argument (the angle) of a complex number in radians.
     ///
     /// The result will lie in the range $[-\pi, \pi]$.
