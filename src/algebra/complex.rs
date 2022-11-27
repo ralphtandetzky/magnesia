@@ -418,3 +418,22 @@ fn test_cos_complex_f64() {
     let b = ((i * z).exp() + (-i * z).exp()) / Complex::new(2f64, 0f64);
     assert!((a - b).abs() <= z.abs().exp() * 2f64 * f64::EPSILON);
 }
+
+impl<T> Sinh for Complex<T>
+where
+    T: Sin + Cos + Sinh + Cosh + MulRefs + Clone,
+{
+    fn sinh(self) -> Complex<T> {
+        let re = self.re.clone().sinh().mul_refs(&self.im.clone().cos());
+        let im = self.re.cosh().mul_refs(&self.im.clone().sin());
+        Self::new(re, im)
+    }
+}
+
+#[test]
+fn test_sinh_complex_f32() {
+    let z = Complex::new(0.3f64, -1.2f64);
+    let a = z.sinh();
+    let b = (z.exp() - (-z).exp()) / Complex::new(2f64, 0f64);
+    assert!((a - b).abs() <= z.abs().exp() * 2f64 * f64::EPSILON);
+}
