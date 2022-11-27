@@ -1,4 +1,4 @@
-/// Trait requiring a square root function on a type.
+/// Provides the square root function $x \mapsto \sqrt{x}$.
 pub trait Sqrt {
     /// Returns the square root of a given value.
     ///
