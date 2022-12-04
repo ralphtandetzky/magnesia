@@ -1,5 +1,5 @@
 use super::{conj::Conj, Field, MulRefs, One, Ring, Zero};
-use crate::functions::{Abs, Atan2, Cos, Cosh, Exp, Sin, Sinh, Sqrt};
+use crate::functions::{Abs, Atan2, Cos, Cosh, Exp, Sin, Sinh, Sqrt, Tan};
 use std::ops::{Add, AddAssign, Div, Mul, MulAssign, Neg, Sub, SubAssign};
 
 /// Complex numbers consisting of real and imaginary part.
@@ -465,4 +465,33 @@ fn test_cosh_complex_f32() {
     let a = z.cosh();
     let b = (z.exp() + (-z).exp()) / Complex::new(2f64, 0f64);
     assert!((a - b).abs() <= z.abs().exp() * 2f64 * f64::EPSILON);
+}
+
+impl<T> Tan for Complex<T>
+where
+    Complex<T>: Sin + Cos + Div<Output = Complex<T>> + Clone,
+{
+    fn tan(self) -> Complex<T> {
+        self.clone().sin() / self.cos()
+    }
+}
+
+#[test]
+fn test_tan_complex_f32() {
+    use rand::prelude::*;
+    let mut rng = thread_rng();
+    for _ in 0..1000000 {
+        let a: Complex<f32> = Complex::new(rng.gen_range(-4.0..4.0), rng.gen_range(-4.0..4.0));
+        let b = Complex::new(rng.gen_range(-4.0..4.0), rng.gen_range(-4.0..4.0));
+        let c = a + b;
+        let ta = a.tan();
+        let tb = b.tan();
+        let tc = c.tan();
+        let one = Complex::new(1.0, 0.0);
+        let expected = (ta + tb) / (one - ta * tb);
+        let diff_abs = (tc - expected).abs();
+        let tolerance =
+            (tc.sqr_norm() + 1.0).max(1.0 / (one - ta * tb).sqr_norm()) * (8.0 * f32::EPSILON);
+        assert!(diff_abs <= tolerance);
+    }
 }
