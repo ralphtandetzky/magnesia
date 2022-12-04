@@ -7,8 +7,10 @@ mod sin;
 mod sinh;
 mod sqrt;
 mod tan;
+mod asin;
 
 pub use self::abs::Abs;
+pub use self::asin::Asin;
 pub use self::atan2::Atan2;
 pub use self::cos::Cos;
 pub use self::cosh::Cosh;
