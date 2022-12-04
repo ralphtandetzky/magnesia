@@ -16,3 +16,6 @@ authors = ["Ralph Tandetzky"]
 rustdoc-args = ["--html-in-header", "katex.html"]
 
 [dependencies]
+
+[dev-dependencies]
+rand = "0.8.5"
