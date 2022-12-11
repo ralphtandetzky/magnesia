@@ -1,6 +1,10 @@
-/// Provides a function computing the quadrant arctangent of `self` and `other` in radians.
+/// Provides a function computing the quadrant arctangent of `self` and
+/// `other` in radians.
 pub trait Atan2 {
     /// Computes the quadrant arctangent of `self` and `other` in radians.
+    ///
+    /// Let `self` be denoted by $y$ and `other` be $x$, then for $x>0$ the
+    /// result of this function will be $\arctan\frac yx$.
     fn atan2(self, other: Self) -> Self;
 }
 
