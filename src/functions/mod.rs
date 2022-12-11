@@ -8,6 +8,7 @@ mod sinh;
 mod sqrt;
 mod tan;
 mod asin;
+mod log;
 
 pub use self::abs::Abs;
 pub use self::asin::Asin;
@@ -15,6 +16,7 @@ pub use self::atan2::Atan2;
 pub use self::cos::Cos;
 pub use self::cosh::Cosh;
 pub use self::exp::Exp;
+pub use self::log::Ln;
 pub use self::sin::Sin;
 pub use self::sinh::Sinh;
 pub use self::sqrt::Sqrt;
