@@ -480,7 +480,7 @@ where
 fn test_tan_complex_f32() {
     use rand::prelude::*;
     let mut rng = thread_rng();
-    for _ in 0..1000000 {
+    for _ in 0..100 {
         let a: Complex<f32> = Complex::new(rng.gen_range(-4.0..4.0), rng.gen_range(-4.0..4.0));
         let b = Complex::new(rng.gen_range(-4.0..4.0), rng.gen_range(-4.0..4.0));
         let c = a + b;
