@@ -1,5 +1,5 @@
 use super::{conj::Conj, Field, MulRefs, One, Ring, Zero};
-use crate::functions::{Abs, Atan2, Cos, Cosh, Exp, Sin, Sinh, Sqrt, Tan};
+use crate::functions::{Abs, Atan2, Cos, Cosh, Exp, Ln, Sin, Sinh, Sqrt, Tan};
 use std::ops::{Add, AddAssign, Div, Mul, MulAssign, Neg, Sub, SubAssign};
 
 /// Complex numbers consisting of real and imaginary part.
@@ -493,5 +493,47 @@ fn test_tan_complex_f32() {
         let tolerance =
             (tc.sqr_norm() + 1.0).max(1.0 / (one - ta * tb).sqr_norm()) * (8.0 * f32::EPSILON);
         assert!(diff_abs <= tolerance);
+    }
+}
+
+impl<T> Ln for Complex<T>
+where
+    for<'a> T: AddAssign<&'a T> + Atan2 + Clone + Div<Output = T> + Ln + MulRefs + One,
+{
+    fn ln(self) -> Self {
+        let two = {
+            let mut x = T::one();
+            x += &T::one();
+            x
+        };
+        Self::new(self.sqr_norm().ln() / two, self.im.atan2(self.re))
+    }
+}
+
+#[test]
+fn test_ln_complex_f32() {
+    use rand::prelude::*;
+    let mut rng = thread_rng();
+    for _ in 0..100 {
+        let re_a = rng.gen_range(-5f32..5f32);
+        let im_a = rng.gen_range(-5f32..5f32);
+        let re_b = rng.gen_range(-5f32..5f32);
+        let im_b = rng.gen_range(-5f32..5f32);
+        let a = Complex::new(re_a, im_a);
+        let b = Complex::new(re_b, im_b);
+        let c = a * b;
+        let ln_a = a.ln();
+        let ln_b = b.ln();
+        let ln_c = c.ln();
+        let tolerance = (a.abs().max(1f32 / a.abs()) + b.abs().max(1f32 / b.abs())) * f32::EPSILON;
+        let diff = ln_c - ln_a - ln_b;
+        assert!(diff.re.abs() <= 10f32 * tolerance);
+        if diff.im > 1f32 {
+            assert!((diff.im - 2.0 * std::f32::consts::PI).abs() <= 8.0 * f32::EPSILON);
+        } else if diff.im < -1f32 {
+            assert!((diff.im + 2.0 * std::f32::consts::PI).abs() <= 8.0 * f32::EPSILON);
+        } else {
+            assert!(diff.im.abs() <= 8.0 * std::f32::consts::PI);
+        }
     }
 }
