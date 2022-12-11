@@ -1,14 +1,14 @@
 mod abs;
+mod asin;
 mod atan2;
 mod cos;
 mod cosh;
 mod exp;
+mod log;
 mod sin;
 mod sinh;
 mod sqrt;
 mod tan;
-mod asin;
-mod log;
 
 pub use self::abs::Abs;
 pub use self::asin::Asin;
