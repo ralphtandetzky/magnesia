@@ -369,7 +369,7 @@ fn test_div_complex_f32() {
 
 impl<'a, 'b, T> Div<&'a T> for &'b Complex<T>
 where
-    for <'c, 'd> &'c T: Div<&'d T, Output=T>
+    for<'c, 'd> &'c T: Div<&'d T, Output = T>,
 {
     type Output = Complex<T>;
 
@@ -388,7 +388,7 @@ fn test_div_ref_complex_f32_ref_f32() {
 
 impl<'a, T> Div<&'a T> for Complex<T>
 where
-    for <'b> T: Div<&'b T, Output=T>
+    for<'b> T: Div<&'b T, Output = T>,
 {
     type Output = Complex<T>;
 
@@ -407,7 +407,7 @@ fn test_div_complex_f32_ref_f32() {
 
 impl<T> Div<T> for Complex<T>
 where
-    for <'a> T: Div<T, Output=T> + Div<&'a T, Output=T>
+    for<'a> T: Div<T, Output = T> + Div<&'a T, Output = T>,
 {
     type Output = Complex<T>;
 
