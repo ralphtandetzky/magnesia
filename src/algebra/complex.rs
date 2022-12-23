@@ -346,6 +346,55 @@ fn test_div_complex_f32() {
     assert_eq!(c, a);
 }
 
+impl<'a, 'b, T> Div<&'a T> for &'b Complex<T>
+where
+    for <'c, 'd> &'c T: Div<&'d T, Output=T>
+{
+    type Output = Complex<T>;
+
+    fn div(self, other: &'a T) -> Complex<T> {
+        Complex::new(&self.re / other, &self.im / other)
+    }
+}
+
+#[test]
+fn test_div_ref_complex_f32_ref_f32() {
+    let a = Complex::new(3f32, 5f32);
+    let b = 4f32;
+    let c = &a / &b;
+    assert_eq!(c, Complex::new(0.75f32, 1.25f32));
+}
+
+impl<'a, T> Div<&'a T> for Complex<T>
+where
+    for <'b> T: Div<&'b T, Output=T>
+{
+    type Output = Complex<T>;
+
+    fn div(self, other: &'a T) -> Complex<T> {
+        Complex::new(self.re / other, self.im / other)
+    }
+}
+
+#[test]
+fn test_div_complex_f32_ref_f32() {
+    let a = Complex::new(3f32, 5f32);
+    let b = 4f32;
+    let c = a / &b;
+    assert_eq!(c, Complex::new(0.75f32, 1.25f32));
+}
+
+impl<T> Div<T> for Complex<T>
+where
+    for <'a> T: Div<T, Output=T> + Div<&'a T, Output=T>
+{
+    type Output = Complex<T>;
+
+    fn div(self, other: T) -> Complex<T> {
+        Complex::new(self.re / &other, self.im / other)
+    }
+}
+
 impl<T: Neg<Output = T>> Neg for Complex<T> {
     type Output = Self;
 
