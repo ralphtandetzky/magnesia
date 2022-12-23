@@ -2,8 +2,6 @@ use super::SVector;
 use crate::algebra::{Conj, MulRefs, One, Ring, Zero};
 use std::ops::{Add, AddAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
-trait Dimension {}
-
 /// A matrix type with static number of rows and columns.
 ///
 /// # Example
