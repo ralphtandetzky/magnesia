@@ -85,6 +85,27 @@ fn test_abs_complex_f32() {
     assert_eq!(a, 2f32.sqrt());
 }
 
+impl<'a, T> Abs for &'a Complex<T>
+where
+    for<'b> T: AddAssign<&'b T> + MulRefs + Sqrt,
+{
+    type Output = T;
+
+    fn abs(self) -> Self::Output {
+        self.sqr_norm().sqrt()
+    }
+}
+
+#[test]
+fn test_abs_ref_complex_f32() {
+    let z = Complex::new(3f32, 4f32);
+    let a = (&z).abs();
+    assert_eq!(a, 5f32);
+    let z = Complex::new(1f32, -1f32);
+    let a = (&z).abs();
+    assert_eq!(a, 2f32.sqrt());
+}
+
 impl<T> Complex<T>
 where
     T: Atan2,
