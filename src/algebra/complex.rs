@@ -484,7 +484,7 @@ where
 {
     fn sinh(self) -> Complex<T> {
         let re = self.re.clone().sinh().mul_refs(&self.im.clone().cos());
-        let im = self.re.cosh().mul_refs(&self.im.clone().sin());
+        let im = self.re.cosh().mul_refs(&self.im.sin());
         Self::new(re, im)
     }
 }
@@ -503,7 +503,7 @@ where
 {
     fn cosh(self) -> Complex<T> {
         let re = self.re.clone().cosh().mul_refs(&self.im.clone().cos());
-        let im = self.re.sinh().mul_refs(&self.im.clone().sin());
+        let im = self.re.sinh().mul_refs(&self.im.sin());
         Self::new(re, im)
     }
 }
