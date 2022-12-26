@@ -607,3 +607,63 @@ fn test_ln_complex_f32() {
         }
     }
 }
+
+impl<T> Sqrt for Complex<T>
+where
+    for<'a> T: AddAssign<&'a T>
+        + Add<&'a T, Output = T>
+        + Div<&'a T, Output = T>
+        + MulRefs
+        + Neg<Output = T>
+        + One
+        + PartialOrd
+        + Sqrt
+        + Sub<&'a T, Output = T>
+        + Zero,
+    for<'a, 'b> &'a T: Abs<Output = T> + Add<&'b T, Output = T> + Sub<&'b T, Output = T>,
+{
+    fn sqrt(&self) -> Self {
+        let two = T::one() + &T::one();
+        let one_half = T::one() / &two;
+        let abs = self.abs();
+        let re;
+        let abs_im;
+        if self.re.abs() <= self.im.abs().mul_refs(&two) {
+            re = (&abs + &self.re).mul_refs(&one_half).sqrt();
+            abs_im = (&abs - &self.re).mul_refs(&one_half).sqrt();
+        } else {
+            // This branch is for numerical stability. The add or subtract
+            // operation above can lead to large relative errors.
+            // To avoid this we need another branch and division which is more
+            // expensive, but numerically more accurate.
+            let denominator = (&abs + &self.re.abs()).mul_refs(&two).sqrt();
+            let alpha = self.im.abs() / &denominator;
+            let beta = (&abs + &self.re.abs()).mul_refs(&one_half).sqrt();
+            if self.re >= T::zero() {
+                re = beta;
+                abs_im = alpha;
+            } else {
+                re = alpha;
+                abs_im = beta
+            };
+        }
+        Self::new(re, if self.im < T::zero() { -abs_im } else { abs_im })
+    }
+}
+
+#[test]
+fn test_sqrt_complex_f32() {
+    use rand::prelude::*;
+    let mut rng = thread_rng();
+    for _ in 0..100 {
+        let re = rng.gen_range(-5f32..5f32);
+        let im = rng.gen_range(-5f32..5f32);
+        let z = Complex::new(re, im);
+        let s = z.sqrt();
+        let ss = s * s;
+        let error = (z - ss).abs();
+        let tolerance = 4f32 * f32::EPSILON * z.abs();
+        assert!(s.re >= 0f32);
+        assert!(error <= tolerance);
+    }
+}
