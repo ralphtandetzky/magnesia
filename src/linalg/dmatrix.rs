@@ -1,4 +1,4 @@
-use std::{marker::PhantomData, ops::Add};
+use std::{marker::PhantomData, ops::{Add, Sub, Mul, AddAssign}};
 
 pub trait MatrixExpr {
     type Entry;
@@ -111,7 +111,7 @@ impl<Lhs: Add<Rhs>, Rhs> BinOp<Lhs, Rhs> for AddOp<Lhs, Rhs> {
     type Output = Lhs::Output;
 
     fn apply(&self, lhs: Lhs, rhs: Rhs) -> Self::Output {
-        lhs.add(rhs)
+        lhs + rhs
     }
 }
 
@@ -125,6 +125,35 @@ where
 
     fn add(self, rhs: Rhs) -> Self::Output {
         self.apply_bin_op_elemwise(AddOp::new(), rhs)
+    }
+}
+
+pub struct SubOp<Lhs: Sub<Rhs>, Rhs>(PhantomData<Lhs>, PhantomData<Rhs>);
+
+impl<Lhs: Sub<Rhs>, Rhs> SubOp<Lhs, Rhs> {
+    fn new() -> Self {
+        Self(PhantomData, PhantomData)
+    }
+}
+
+impl<Lhs: Sub<Rhs>, Rhs> BinOp<Lhs, Rhs> for SubOp<Lhs, Rhs> {
+    type Output = Lhs::Output;
+
+    fn apply(&self, lhs: Lhs, rhs: Rhs) -> Self::Output {
+        lhs - rhs
+    }
+}
+
+impl<Rhs, Lhs: MatrixExpr> Sub<Rhs> for ExprWrapper<Lhs>
+where
+    Lhs: MatrixExpr,
+    Rhs: MatrixExpr,
+    Lhs::Entry: Sub<Rhs::Entry>,
+{
+    type Output = ExprWrapper<BinOpExpr<SubOp<Lhs::Entry, Rhs::Entry>, Lhs, Rhs>>;
+
+    fn sub(self, rhs: Rhs) -> Self::Output {
+        self.apply_bin_op_elemwise(SubOp::new(), rhs)
     }
 }
 
@@ -189,9 +218,86 @@ where
 
 #[test]
 fn test_add_dmatrix() {
-    let a = DMatrix::from([[1, 2], [3, 4]]);
-    let b = DMatrix::from([[3, 3], [3, 3]]);
+    let a = DMatrix::from([[1, 2], [3, 4], [5, 6]]);
+    let b = DMatrix::from([[3, 3], [3, 3], [3, 3]]);
     let c = (&a + &b).eval();
-    let d = DMatrix::from([[4, 5], [6, 7]]);
+    let d = DMatrix::from([[4, 5], [6, 7], [8, 9]]);
+    assert_eq!(c, d);
+}
+
+impl<T, Rhs> Sub<Rhs> for &DMatrix<T>
+where
+    T: Clone,
+    ExprWrapper<Self>: Sub<Rhs>,
+{
+    type Output = <ExprWrapper<Self> as Sub<Rhs>>::Output;
+
+    fn sub(self, rhs: Rhs) -> Self::Output {
+        self.wrap() - rhs
+    }
+}
+
+#[test]
+fn test_sub_dmatrix() {
+    let a = DMatrix::from([[1, 2], [3, 4], [5, 6]]);
+    let b = DMatrix::from([[3, 3], [3, 3], [3, 3]]);
+    let c = (&a - &b).eval();
+    let d = DMatrix::from([[-2, -1], [0, 1], [2, 3]]);
+    assert_eq!(c, d);
+}
+
+pub struct MulDMatrix<'a, T> {
+    lhs : &'a DMatrix<T>,
+    rhs : &'a DMatrix<T>,
+}
+
+impl<'a, T> MulDMatrix<'a, T> {
+    fn new(lhs: &'a DMatrix<T>, rhs: &'a DMatrix<T>) -> Self { Self { lhs, rhs } }
+}
+
+impl<'a, T> MatrixExpr for MulDMatrix<'a, T>
+where
+    T:Clone + Mul<T>,
+    <T as Mul<T>>::Output: AddAssign,
+{
+    type Entry = <T as Mul<T>>::Output;
+
+    fn entry(&self, row: usize, col: usize) -> Self::Entry {
+        let mut sum = self.lhs.entry(row, 0) * self.rhs.entry(0, col);
+        for i in 1..self.lhs.num_cols() {
+            sum += self.lhs.entry(row, i) * self.rhs.entry(i, col);
+        }
+        sum
+    }
+
+    fn num_rows(&self) -> usize {
+        self.lhs.num_rows()
+    }
+
+    fn num_cols(&self) -> usize {
+        self.rhs.num_cols()
+    }
+}
+
+impl<'a, T> Mul<Self> for &'a DMatrix<T>
+where
+    T:Clone + Mul<T>,
+    <T as Mul<T>>::Output: AddAssign,
+{
+    type Output = MulDMatrix<'a, T>;
+
+    fn mul(self, rhs: Self) -> Self::Output {
+        assert_eq!(self.num_cols(), rhs.num_rows(),
+            "The number of columns of the left hand side matrix should be equal to the number of rows of the right hand side matrix.");
+        MulDMatrix::new(self, rhs)
+    }
+}
+
+#[test]
+fn test_mul_dmatrix() {
+    let a = DMatrix::from([[-1, 0, 1], [2, 3, 4]]);
+    let b = DMatrix::from([[0, 1], [2, 3], [4, 5]]);
+    let c = (&a * &b).eval();
+    let d = DMatrix::from([[4, 4], [22, 31]]);
     assert_eq!(c, d);
 }
