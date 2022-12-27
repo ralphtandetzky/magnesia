@@ -1,5 +1,7 @@
-mod matrix;
+mod dmatrix;
+mod smatrix;
 mod vector;
 
-pub use self::matrix::SMatrix;
+pub use self::dmatrix::DMatrix;
+pub use self::smatrix::SMatrix;
 pub use self::vector::SVector;
