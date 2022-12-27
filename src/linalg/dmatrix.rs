@@ -165,7 +165,7 @@ pub struct DMatrix<T> {
     num_cols: usize,
 }
 
-impl<T, const NUM_ROWS: usize, const NUM_COLS: usize> From<[[T; NUM_COLS]; NUM_ROWS]>
+impl<T, Expr: MatrixExpr<Entry=T>> From<Expr>
     for DMatrix<T>
 {
     /// Creates a dynamically sized matrix from an array.
@@ -175,13 +175,8 @@ impl<T, const NUM_ROWS: usize, const NUM_COLS: usize> From<[[T; NUM_COLS]; NUM_R
     /// # use magnesia::linalg::DMatrix;
     /// let a = DMatrix::from([[1,2],[3,4]]);
     /// ```
-    fn from(coefficients: [[T; NUM_COLS]; NUM_ROWS]) -> Self {
-        let data = coefficients.into_iter().flatten().collect();
-        Self {
-            data,
-            num_rows: NUM_ROWS,
-            num_cols: NUM_COLS,
-        }
+    fn from(expr: Expr) -> Self {
+        expr.eval()
     }
 }
 
@@ -300,4 +295,21 @@ fn test_mul_dmatrix() {
     let c = (&a * &b).eval();
     let d = DMatrix::from([[4, 4], [22, 31]]);
     assert_eq!(c, d);
+}
+
+impl<T: Clone, const NUM_ROWS: usize, const NUM_COLS: usize> MatrixExpr for [[T; NUM_COLS]; NUM_ROWS]
+{
+    type Entry = T;
+
+    fn entry(&self, row: usize, col: usize) -> Self::Entry {
+        self[row][col].clone()
+    }
+
+    fn num_rows(&self) -> usize {
+        NUM_ROWS
+    }
+
+    fn num_cols(&self) -> usize {
+        NUM_COLS
+    }
 }
