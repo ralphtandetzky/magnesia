@@ -1,4 +1,7 @@
-use std::{marker::PhantomData, ops::{Add, Sub, Mul, AddAssign}};
+use std::{
+    marker::PhantomData,
+    ops::{Add, AddAssign, Mul, Sub},
+};
 
 pub trait MatrixExpr {
     type Entry;
@@ -24,6 +27,13 @@ pub trait MatrixExpr {
         Self: Sized,
     {
         ExprWrapper(self)
+    }
+
+    fn t(self) -> ExprWrapper<TransposedExpr<Self>>
+    where
+        Self: Sized,
+    {
+        ExprWrapper(TransposedExpr(self))
     }
 }
 
@@ -157,6 +167,31 @@ where
     }
 }
 
+pub struct TransposedExpr<Expr: MatrixExpr>(Expr);
+
+impl<Expr: MatrixExpr> MatrixExpr for TransposedExpr<Expr> {
+    type Entry = Expr::Entry;
+
+    fn entry(&self, row: usize, col: usize) -> Self::Entry {
+        self.0.entry(col, row)
+    }
+
+    fn num_rows(&self) -> usize {
+        self.0.num_cols()
+    }
+
+    fn num_cols(&self) -> usize {
+        self.0.num_rows()
+    }
+}
+
+#[test]
+fn test_transpose() {
+    let a = [[1, 2, 3], [4, 5, 6]].t().eval();
+    let b = [[1, 4], [2, 5], [3, 6]].eval();
+    assert_eq!(a, b);
+}
+
 /// A matrix type with dynamic number of rows and columns.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct DMatrix<T> {
@@ -165,15 +200,13 @@ pub struct DMatrix<T> {
     num_cols: usize,
 }
 
-impl<T, Expr: MatrixExpr<Entry=T>> From<Expr>
-    for DMatrix<T>
-{
+impl<T, Expr: MatrixExpr<Entry = T>> From<Expr> for DMatrix<T> {
     /// Creates a dynamically sized matrix from an array.
     ///
     /// # Example
     /// ```
     /// # use magnesia::linalg::DMatrix;
-    /// let a = DMatrix::from([[1,2],[3,4]]);
+    /// let a = [[1,2],[3,4]].eval();
     /// ```
     fn from(expr: Expr) -> Self {
         expr.eval()
@@ -213,10 +246,10 @@ where
 
 #[test]
 fn test_add_dmatrix() {
-    let a = DMatrix::from([[1, 2], [3, 4], [5, 6]]);
-    let b = DMatrix::from([[3, 3], [3, 3], [3, 3]]);
+    let a = [[1, 2], [3, 4], [5, 6]].eval();
+    let b = [[3, 3], [3, 3], [3, 3]].eval();
     let c = (&a + &b).eval();
-    let d = DMatrix::from([[4, 5], [6, 7], [8, 9]]);
+    let d = [[4, 5], [6, 7], [8, 9]].eval();
     assert_eq!(c, d);
 }
 
@@ -234,25 +267,27 @@ where
 
 #[test]
 fn test_sub_dmatrix() {
-    let a = DMatrix::from([[1, 2], [3, 4], [5, 6]]);
-    let b = DMatrix::from([[3, 3], [3, 3], [3, 3]]);
+    let a = [[1, 2], [3, 4], [5, 6]].eval();
+    let b = [[3, 3], [3, 3], [3, 3]].eval();
     let c = (&a - &b).eval();
-    let d = DMatrix::from([[-2, -1], [0, 1], [2, 3]]);
+    let d = [[-2, -1], [0, 1], [2, 3]].eval();
     assert_eq!(c, d);
 }
 
 pub struct MulDMatrix<'a, T> {
-    lhs : &'a DMatrix<T>,
-    rhs : &'a DMatrix<T>,
+    lhs: &'a DMatrix<T>,
+    rhs: &'a DMatrix<T>,
 }
 
 impl<'a, T> MulDMatrix<'a, T> {
-    fn new(lhs: &'a DMatrix<T>, rhs: &'a DMatrix<T>) -> Self { Self { lhs, rhs } }
+    fn new(lhs: &'a DMatrix<T>, rhs: &'a DMatrix<T>) -> Self {
+        Self { lhs, rhs }
+    }
 }
 
 impl<'a, T> MatrixExpr for MulDMatrix<'a, T>
 where
-    T:Clone + Mul<T>,
+    T: Clone + Mul<T>,
     <T as Mul<T>>::Output: AddAssign,
 {
     type Entry = <T as Mul<T>>::Output;
@@ -276,7 +311,7 @@ where
 
 impl<'a, T> Mul<Self> for &'a DMatrix<T>
 where
-    T:Clone + Mul<T>,
+    T: Clone + Mul<T>,
     <T as Mul<T>>::Output: AddAssign,
 {
     type Output = MulDMatrix<'a, T>;
@@ -290,14 +325,15 @@ where
 
 #[test]
 fn test_mul_dmatrix() {
-    let a = DMatrix::from([[-1, 0, 1], [2, 3, 4]]);
-    let b = DMatrix::from([[0, 1], [2, 3], [4, 5]]);
+    let a = [[-1, 0, 1], [2, 3, 4]].eval();
+    let b = [[0, 1], [2, 3], [4, 5]].eval();
     let c = (&a * &b).eval();
-    let d = DMatrix::from([[4, 4], [22, 31]]);
+    let d = [[4, 4], [22, 31]].eval();
     assert_eq!(c, d);
 }
 
-impl<T: Clone, const NUM_ROWS: usize, const NUM_COLS: usize> MatrixExpr for [[T; NUM_COLS]; NUM_ROWS]
+impl<T: Clone, const NUM_ROWS: usize, const NUM_COLS: usize> MatrixExpr
+    for [[T; NUM_COLS]; NUM_ROWS]
 {
     type Entry = T;
 
