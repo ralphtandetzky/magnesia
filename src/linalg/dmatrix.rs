@@ -3,7 +3,7 @@ use std::{
     ops::{Add, AddAssign, Div, Index, IndexMut, Mul, Sub},
 };
 
-use crate::algebra::{One, Zero};
+use crate::algebra::{Conj, One, Zero};
 
 /// Matrix-like interface
 pub trait MatrixExpr: Sized {
@@ -39,7 +39,15 @@ pub trait MatrixExpr: Sized {
 
     /// Returns the transposed of the `self` matrix.
     fn t(self) -> ExprWrapper<TransposedExpr<Self>> {
-        ExprWrapper(TransposedExpr(self))
+        TransposedExpr(self).wrap()
+    }
+
+    /// Returns the conjugate transpose (also called Hermetian transpose).
+    fn h(self) -> ExprWrapper<ConjugateTransposedExpr<Self>>
+    where
+        Self::Entry: Conj,
+    {
+        ConjugateTransposedExpr(self).wrap()
     }
 }
 
@@ -71,7 +79,7 @@ impl<Lhs: MatrixExpr> ExprWrapper<Lhs> {
             "Number of rows on the left hand side should be equal to the number of rows on the right hand side");
         assert_eq!(self.num_cols(), rhs.num_cols(),
             "Number of columns on the left hand side should be equal to the number of columns on the right hand side");
-        ExprWrapper(BinOpExpr::new(op, self.0, rhs))
+        BinOpExpr::new(op, self.0, rhs).wrap()
     }
 
     pub fn apply_bin_fn_elemwise<F: Fn(Lhs::Entry, Rhs::Entry) -> Out, Rhs: MatrixExpr, Out>(
@@ -245,6 +253,36 @@ impl<Expr: MatrixExpr> MatrixExpr for TransposedExpr<Expr> {
 fn test_transpose() {
     let a = [[1, 2, 3], [4, 5, 6]].t().eval();
     let b = [[1, 4], [2, 5], [3, 6]].eval();
+    assert_eq!(a, b);
+}
+
+pub struct ConjugateTransposedExpr<Expr: MatrixExpr>(Expr);
+
+impl<Expr: MatrixExpr> MatrixExpr for ConjugateTransposedExpr<Expr>
+where
+    Expr::Entry: Conj,
+{
+    type Entry = Expr::Entry;
+
+    fn entry(&self, row: usize, col: usize) -> Self::Entry {
+        self.0.entry(col, row).conj()
+    }
+
+    fn num_rows(&self) -> usize {
+        self.0.num_cols()
+    }
+
+    fn num_cols(&self) -> usize {
+        self.0.num_rows()
+    }
+}
+
+#[test]
+fn test_conjugate_transpose() {
+    use crate::algebra::Complex;
+
+    let a = [[Complex::new(1, 2)], [Complex::new(3, 4)]].h().eval();
+    let b = [[Complex::new(1, -2), Complex::new(3, -4)]].eval();
     assert_eq!(a, b);
 }
 
