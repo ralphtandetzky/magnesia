@@ -32,16 +32,12 @@ pub trait MatrixExpr: Sized {
 
     /// Wraps the matrix expression into an [`ExprWrapper`].
     fn wrap(self) -> ExprWrapper<Self>
-    where
-        Self: Sized,
     {
         ExprWrapper(self)
     }
 
     /// Returns the transposed of the `self` matrix.
     fn t(self) -> ExprWrapper<TransposedExpr<Self>>
-    where
-        Self: Sized,
     {
         ExprWrapper(TransposedExpr(self))
     }
