@@ -1,18 +1,26 @@
 use std::{
     marker::PhantomData,
-    ops::{Add, AddAssign, Mul, Sub},
+    ops::{Add, AddAssign, Div, Mul, Sub},
 };
 
+/// Matrix-like interface
 pub trait MatrixExpr {
+    /// The element type of the matrix.
     type Entry;
+
+    /// Returns an entry of the matrix or matrix.
     fn entry(&self, row: usize, col: usize) -> Self::Entry;
+
+    /// Returns the number of rows of the matrix.
     fn num_rows(&self) -> usize;
+
+    /// Returns the number of columns of the matrix.
     fn num_cols(&self) -> usize;
 
+    /// Evaluates all entries of the matrix and stores them in a [`DMatrix`].
     fn eval(&self) -> DMatrix<Self::Entry> {
         let data = (0..self.num_rows())
-            .map(|r| (0..self.num_cols()).map(move |c| (r, c)))
-            .flatten()
+            .flat_map(|r| (0..self.num_cols()).map(move |c| (r, c)))
             .map(|(r, c)| self.entry(r, c))
             .collect();
         DMatrix {
@@ -22,6 +30,7 @@ pub trait MatrixExpr {
         }
     }
 
+    /// Wraps the matrix expression into an [`ExprWrapper`].
     fn wrap(self) -> ExprWrapper<Self>
     where
         Self: Sized,
@@ -29,6 +38,7 @@ pub trait MatrixExpr {
         ExprWrapper(self)
     }
 
+    /// Returns the transposed of the `self` matrix.
     fn t(self) -> ExprWrapper<TransposedExpr<Self>>
     where
         Self: Sized,
@@ -56,7 +66,7 @@ impl<T: MatrixExpr> MatrixExpr for ExprWrapper<T> {
 }
 
 impl<Lhs: MatrixExpr> ExprWrapper<Lhs> {
-    fn apply_bin_op_elemwise<Op: BinOp<Lhs::Entry, Rhs::Entry>, Rhs: MatrixExpr>(
+    pub fn apply_bin_op_elemwise<Op: BinOp<Lhs::Entry, Rhs::Entry>, Rhs: MatrixExpr>(
         self,
         op: Op,
         rhs: Rhs,
@@ -66,6 +76,32 @@ impl<Lhs: MatrixExpr> ExprWrapper<Lhs> {
         assert_eq!(self.num_cols(), rhs.num_cols(),
             "Number of columns on the left hand side should be equal to the number of columns on the right hand side");
         ExprWrapper(BinOpExpr::new(op, self.0, rhs))
+    }
+
+    pub fn apply_bin_fn_elemwise<F: Fn(Lhs::Entry, Rhs::Entry) -> Out, Rhs: MatrixExpr, Out>(
+        self,
+        rhs: Rhs,
+        f: F,
+    ) -> ExprWrapper<impl MatrixExpr<Entry = Out>> {
+        self.apply_bin_op_elemwise(BinFunOp::new(f), rhs)
+    }
+
+    pub fn mul_elemwise<Rhs: MatrixExpr>(
+        self,
+        rhs: Rhs,
+    ) -> ExprWrapper<impl MatrixExpr<Entry = <Lhs::Entry as Mul<Rhs::Entry>>::Output>>
+    where
+        Lhs::Entry: Mul<Rhs::Entry>,
+    {
+        self.apply_bin_fn_elemwise(rhs, |x, y| x * y)
+    }
+
+    pub fn div_elemwise<Rhs: MatrixExpr>(self, rhs: Rhs
+    ) -> ExprWrapper<impl MatrixExpr<Entry = <Lhs::Entry as Div<Rhs::Entry>>::Output>>
+    where
+        Lhs::Entry: Div<Rhs::Entry>,
+    {
+        self.apply_bin_fn_elemwise(rhs, |x, y| x / y)
     }
 }
 
@@ -109,11 +145,11 @@ where
     }
 }
 
-pub struct AddOp<Lhs: Add<Rhs>, Rhs>(PhantomData<Lhs>, PhantomData<Rhs>);
+pub struct AddOp<Lhs: Add<Rhs>, Rhs>(PhantomData<(Lhs, Rhs)>);
 
 impl<Lhs: Add<Rhs>, Rhs> AddOp<Lhs, Rhs> {
     fn new() -> Self {
-        Self(PhantomData, PhantomData)
+        Self(PhantomData)
     }
 }
 
@@ -138,11 +174,11 @@ where
     }
 }
 
-pub struct SubOp<Lhs: Sub<Rhs>, Rhs>(PhantomData<Lhs>, PhantomData<Rhs>);
+pub struct SubOp<Lhs: Sub<Rhs>, Rhs>(PhantomData<(Lhs, Rhs)>);
 
 impl<Lhs: Sub<Rhs>, Rhs> SubOp<Lhs, Rhs> {
     fn new() -> Self {
-        Self(PhantomData, PhantomData)
+        Self(PhantomData)
     }
 }
 
@@ -164,6 +200,28 @@ where
 
     fn sub(self, rhs: Rhs) -> Self::Output {
         self.apply_bin_op_elemwise(SubOp::new(), rhs)
+    }
+}
+
+pub struct BinFunOp<F: Fn(Lhs, Rhs) -> Out, Lhs, Rhs, Out> {
+    f: F,
+    _phantom: PhantomData<(Lhs, Rhs, Out)>,
+}
+
+impl<F: Fn(Lhs, Rhs) -> Out, Lhs, Rhs, Out> BinFunOp<F, Lhs, Rhs, Out> {
+    pub fn new(f: F) -> Self {
+        Self {
+            f,
+            _phantom: PhantomData,
+        }
+    }
+}
+
+impl<F: Fn(Lhs, Rhs) -> Out, Lhs, Rhs, Out> BinOp<Lhs, Rhs> for BinFunOp<F, Lhs, Rhs, Out> {
+    type Output = Out;
+
+    fn apply(&self, lhs: Lhs, rhs: Rhs) -> Self::Output {
+        (self.f)(lhs, rhs)
     }
 }
 
@@ -206,7 +264,8 @@ impl<T, Expr: MatrixExpr<Entry = T>> From<Expr> for DMatrix<T> {
     /// # Example
     /// ```
     /// # use magnesia::linalg::DMatrix;
-    /// let a = [[1,2],[3,4]].eval();
+    /// # use magnesia::linalg::MatrixExpr;
+    /// let a : DMatrix<_> = [[1,2],[3,4]].eval();
     /// ```
     fn from(expr: Expr) -> Self {
         expr.eval()
@@ -330,6 +389,54 @@ fn test_mul_dmatrix() {
     let c = (&a * &b).eval();
     let d = [[4, 4], [22, 31]].eval();
     assert_eq!(c, d);
+}
+
+impl<T> DMatrix<T> {
+    /// Multiplies a `DMatrix` with another matrix expression element-wise.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use magnesia::linalg::MatrixExpr;
+    /// let a = [[1,2,3],[4,5,6]].eval();
+    /// let b = a.mul_elemwise([[0,1,2],[3,4,5]]).eval();
+    /// let c = [[0,2,6],[12,20,30]].eval();
+    /// assert_eq!(b, c);
+    /// ```
+    pub fn mul_elemwise<'a, Lhs: MatrixExpr>(
+        &'a self,
+        lhs: Lhs,
+    ) -> ExprWrapper<impl MatrixExpr<Entry = T::Output> + 'a>
+    where
+        T: Clone + Mul<Lhs::Entry>,
+        Lhs: 'a,
+    {
+        self.wrap().mul_elemwise(lhs)
+    }
+}
+
+impl<T> DMatrix<T> {
+    /// Divides a `DMatrix` by another matrix expression element-wise.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use magnesia::linalg::MatrixExpr;
+    /// let a = [[1, 4, 9],[16, 25, 36]].eval();
+    /// let b = a.div_elemwise([[1, 2, 3],[4, 5, 6]]).eval();
+    /// let c = [[1, 2, 3],[4, 5, 6]].eval();
+    /// assert_eq!(b, c);
+    /// ```
+    pub fn div_elemwise<'a, Lhs: MatrixExpr>(
+        &'a self,
+        lhs: Lhs,
+    ) -> ExprWrapper<impl MatrixExpr<Entry = T::Output> + 'a>
+    where
+        T: Clone + Div<Lhs::Entry>,
+        Lhs: 'a,
+    {
+        self.wrap().div_elemwise(lhs)
+    }
 }
 
 impl<T: Clone, const NUM_ROWS: usize, const NUM_COLS: usize> MatrixExpr
