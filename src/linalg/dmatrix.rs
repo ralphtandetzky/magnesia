@@ -1,6 +1,6 @@
 use std::{
     marker::PhantomData,
-    ops::{Add, AddAssign, Div, Mul, Sub},
+    ops::{Add, AddAssign, Div, Mul, Sub, Index, IndexMut},
 };
 
 /// Matrix-like interface
@@ -291,6 +291,42 @@ where
     fn eval(self) -> DMatrix<Self::Entry> {
         self.clone()
     }
+}
+
+impl<T> Index<[usize;2]> for DMatrix<T> {
+    type Output = T;
+
+    fn index(&self, row_and_col: [usize;2]) -> &Self::Output {
+        &self.data[row_and_col[0] * self.num_cols + row_and_col[1]]
+    }
+}
+
+#[test]
+fn test_index_dmatrix() {
+    let a = [[1,2],[3,4]].eval();
+    assert_eq!(a[[0,0]], 1);
+    assert_eq!(a[[0,1]], 2);
+    assert_eq!(a[[1,0]], 3);
+    assert_eq!(a[[1,1]], 4);
+}
+
+impl<T> IndexMut<[usize;2]> for DMatrix<T> {
+    fn index_mut(&mut self, row_and_col: [usize;2]) -> &mut <Self as Index<[usize;2]>>::Output {
+        &mut self.data[row_and_col[0] * self.num_cols + row_and_col[1]]
+    }
+}
+
+#[test]
+fn test_index_mut_dmatrix() {
+    let mut a = [[0,0],[0,0]].eval();
+    a[[0,0]] = 1;
+    a[[0,1]] = 2;
+    a[[1,0]] = 3;
+    a[[1,1]] = 4;
+    assert_eq!(a[[0,0]], 1);
+    assert_eq!(a[[0,1]], 2);
+    assert_eq!(a[[1,0]], 3);
+    assert_eq!(a[[1,1]], 4);
 }
 
 impl<T, Rhs> Add<Rhs> for &DMatrix<T>
