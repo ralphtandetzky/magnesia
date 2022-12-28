@@ -256,20 +256,29 @@ pub struct DMatrix<T> {
     num_cols: usize,
 }
 
-struct EyeExpr<T: One + Zero>{
+struct EyeExpr<T: One + Zero> {
     n: usize,
     _phantom: PhantomData<T>,
 }
 
 impl<T: One + Zero> EyeExpr<T> {
-    fn new(n: usize) -> Self { Self { n, _phantom: PhantomData } }
+    fn new(n: usize) -> Self {
+        Self {
+            n,
+            _phantom: PhantomData,
+        }
+    }
 }
 
 impl<T: One + Zero> MatrixExpr for EyeExpr<T> {
     type Entry = T;
 
     fn entry(&self, row: usize, col: usize) -> Self::Entry {
-        if row == col { T::one() } else { T::zero() }
+        if row == col {
+            T::one()
+        } else {
+            T::zero()
+        }
     }
 
     fn num_rows(&self) -> usize {
@@ -281,11 +290,11 @@ impl<T: One + Zero> MatrixExpr for EyeExpr<T> {
     }
 }
 
-impl<T: One+Zero> DMatrix<T> {
+impl<T: One + Zero> DMatrix<T> {
     /// Creates a unit matrix expression of size $n\times n$.
     ///
     /// This is a matrix which is $1$ on the diagonal and $0$ everywhere else.
-    pub fn eye(n: usize) -> ExprWrapper<impl MatrixExpr<Entry=T>> {
+    pub fn eye(n: usize) -> ExprWrapper<impl MatrixExpr<Entry = T>> {
         EyeExpr::new(n).wrap()
     }
 }
@@ -293,8 +302,11 @@ impl<T: One+Zero> DMatrix<T> {
 #[test]
 fn test_dmatrix_eye() {
     assert_eq!(DMatrix::<i32>::eye(1).eval(), [[1]].eval());
-    assert_eq!(DMatrix::<i32>::eye(2).eval(), [[1,0],[0,1]].eval());
-    assert_eq!(DMatrix::<i32>::eye(3).eval(), [[1,0,0],[0,1,0],[0,0,1]].eval());
+    assert_eq!(DMatrix::<i32>::eye(2).eval(), [[1, 0], [0, 1]].eval());
+    assert_eq!(
+        DMatrix::<i32>::eye(3).eval(),
+        [[1, 0, 0], [0, 1, 0], [0, 0, 1]].eval()
+    );
 }
 
 impl<T, Expr: MatrixExpr<Entry = T>> From<Expr> for DMatrix<T> {
