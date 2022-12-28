@@ -4,7 +4,7 @@ use std::{
 };
 
 /// Matrix-like interface
-pub trait MatrixExpr {
+pub trait MatrixExpr: Sized {
     /// The element type of the matrix.
     type Entry;
 
@@ -18,7 +18,7 @@ pub trait MatrixExpr {
     fn num_cols(&self) -> usize;
 
     /// Evaluates all entries of the matrix and stores them in a [`DMatrix`].
-    fn eval(&self) -> DMatrix<Self::Entry> {
+    fn eval(self) -> DMatrix<Self::Entry> {
         let data = (0..self.num_rows())
             .flat_map(|r| (0..self.num_cols()).map(move |c| (r, c)))
             .map(|(r, c)| self.entry(r, c))
@@ -96,7 +96,9 @@ impl<Lhs: MatrixExpr> ExprWrapper<Lhs> {
         self.apply_bin_fn_elemwise(rhs, |x, y| x * y)
     }
 
-    pub fn div_elemwise<Rhs: MatrixExpr>(self, rhs: Rhs
+    pub fn div_elemwise<Rhs: MatrixExpr>(
+        self,
+        rhs: Rhs,
     ) -> ExprWrapper<impl MatrixExpr<Entry = <Lhs::Entry as Div<Rhs::Entry>>::Output>>
     where
         Lhs::Entry: Div<Rhs::Entry>,
@@ -289,6 +291,10 @@ where
     fn num_cols(&self) -> usize {
         (*self).num_cols
     }
+
+    fn eval(self) -> DMatrix<Self::Entry> {
+        self.clone()
+    }
 }
 
 impl<T, Rhs> Add<Rhs> for &DMatrix<T>
@@ -454,5 +460,13 @@ impl<T: Clone, const NUM_ROWS: usize, const NUM_COLS: usize> MatrixExpr
 
     fn num_cols(&self) -> usize {
         NUM_COLS
+    }
+
+    fn eval(self) -> DMatrix<Self::Entry> {
+        DMatrix {
+            data: self.into_iter().flatten().collect(),
+            num_rows: NUM_ROWS,
+            num_cols: NUM_COLS,
+        }
     }
 }
