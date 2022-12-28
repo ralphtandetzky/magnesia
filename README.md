@@ -1,6 +1,6 @@
 <p align="center">
   <a href="https://github.com/ralphtandetzky/magnesia/actions">
-    <img src="https://img.shields.io/github/workflow/status/ralphtandetzky/magnesia/Cargo%20Build%20&%20Test?label=build%20%26%20test" />
+    <img src="https://img.shields.io/github/actions/workflow/status/ralphtandetzky/magnesia/cargo_build_and_test.yml?branch=master" />
   </a>
   <a href="https://docs.rs/magnesia/latest/magnesia/">
     <img src="https://img.shields.io/docsrs/magnesia" />
