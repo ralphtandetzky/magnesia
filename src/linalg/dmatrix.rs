@@ -67,6 +67,10 @@ impl<T: MatrixExpr> MatrixExpr for ExprWrapper<T> {
     fn num_cols(&self) -> usize {
         self.0.num_cols()
     }
+
+    fn eval(self) -> DMatrix<Self::Entry> {
+        self.0.eval()
+    }
 }
 
 impl<Lhs: MatrixExpr> ExprWrapper<Lhs> {
