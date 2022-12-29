@@ -1,6 +1,6 @@
 use std::{
     marker::PhantomData,
-    ops::{Add, AddAssign, Div, Index, IndexMut, Mul, Sub},
+    ops::{Add, AddAssign, Div, Index, IndexMut, Mul, Sub, SubAssign},
 };
 
 use crate::algebra::{Conj, One, Zero};
@@ -495,6 +495,28 @@ fn test_sub_dmatrix() {
     let c = (&a - &b).eval();
     let d = [[-2, -1], [0, 1], [2, 3]].eval();
     assert_eq!(c, d);
+}
+
+impl<T, Rhs> SubAssign<Rhs> for DMatrix<T>
+where
+    T: SubAssign<Rhs::Entry> + Clone,
+    Rhs: MatrixExpr,
+{
+    fn sub_assign(&mut self, rhs: Rhs) {
+        let num_cols = self.num_cols();
+        for row in 0..self.num_rows() {
+            for col in 0..num_cols {
+                self.data[row * num_cols + col] -= rhs.entry(row, col);
+            }
+        }
+    }
+}
+
+#[test]
+fn test_sub_assign_dmatrix() {
+    let mut a = [[1, 2], [3, 4]].eval();
+    a -= [[2, 2], [2, 2]];
+    assert_eq!(a, [[-1, 0], [1, 2]].eval());
 }
 
 pub struct MulDMatrix<'a, T> {
