@@ -5,12 +5,12 @@ use std::{
 
 use crate::algebra::{Conj, One, Zero};
 
-/// Matrix-like interface
+/// A matrix-like interface.
 pub trait MatrixExpr: Sized {
     /// The element type of the matrix.
     type Entry;
 
-    /// Returns an entry of the matrix or matrix.
+    /// Returns an entry of the matrix.
     fn entry(&self, row: usize, col: usize) -> Self::Entry;
 
     /// Returns the number of rows of the matrix.
