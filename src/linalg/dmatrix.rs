@@ -347,17 +347,26 @@ fn test_dmatrix_eye() {
     );
 }
 
-impl<T, Expr: MatrixExpr<Entry = T>> From<Expr> for DMatrix<T> {
-    /// Creates a dynamically sized matrix from an array.
-    ///
-    /// # Example
-    /// ```
-    /// # use magnesia::linalg::DMatrix;
-    /// # use magnesia::linalg::MatrixExpr;
-    /// let a : DMatrix<_> = [[1,2],[3,4]].eval();
-    /// ```
-    fn from(expr: Expr) -> Self {
-        expr.eval()
+impl<T> MatrixExpr for DMatrix<T>
+where
+    T: Clone,
+{
+    type Entry = T;
+
+    fn entry(&self, row: usize, col: usize) -> Self::Entry {
+        self.data[row * self.num_cols + col].clone()
+    }
+
+    fn num_rows(&self) -> usize {
+        self.num_rows
+    }
+
+    fn num_cols(&self) -> usize {
+        self.num_cols
+    }
+
+    fn eval(self) -> DMatrix<Self::Entry> {
+        self
     }
 }
 
