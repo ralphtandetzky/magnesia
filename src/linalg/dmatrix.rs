@@ -454,6 +454,28 @@ fn test_add_dmatrix() {
     assert_eq!(c, d);
 }
 
+impl<T, Rhs> AddAssign<Rhs> for DMatrix<T>
+where
+    T: AddAssign<Rhs::Entry> + Clone,
+    Rhs: MatrixExpr,
+{
+    fn add_assign(&mut self, rhs: Rhs) {
+        let num_cols = self.num_cols();
+        for row in 0..self.num_rows() {
+            for col in 0..num_cols {
+                self.data[row * num_cols + col] += rhs.entry(row, col);
+            }
+        }
+    }
+}
+
+#[test]
+fn test_add_assign_dmatrix() {
+    let mut a = [[1, 2], [3, 4]].eval();
+    a += [[2, 2], [2, 2]];
+    assert_eq!(a, [[3, 4], [5, 6]].eval());
+}
+
 impl<T, Rhs> Sub<Rhs> for &DMatrix<T>
 where
     T: Clone,
