@@ -114,84 +114,70 @@ fn test_make_matrix_expr() {
     assert_eq!(a, b);
 }
 
-pub fn make_unary_matrix_expr<Expr, F, Out>(
-    expr: Expr,
-    f: F,
-) -> ExprWrapper<impl MatrixExpr<Entry = Out>>
-where
-    Expr: MatrixExpr,
-    F: Fn(Expr::Entry) -> Out,
-{
-    make_matrix_expr(expr.num_rows(), expr.num_cols(), move |row, col| {
-        f(expr.entry(row, col))
-    })
+impl<Lhs: MatrixExpr> ExprWrapper<Lhs> {
+    pub fn map<F, Out>(
+        self,
+        f: F,
+    ) -> ExprWrapper<impl MatrixExpr<Entry = Out>>
+    where
+        F: Fn(Lhs::Entry) -> Out,
+    {
+        make_matrix_expr(self.0.num_rows(), self.0.num_cols(), move |row, col| {
+            f(self.0.entry(row, col))
+        })
+    }
 }
 
 #[test]
-fn test_make_unary_matrix_expr() {
-    let a = [[1, 2, 3], [4, 5, 6]].eval();
-    let c = make_unary_matrix_expr(a, |a| 2 * a + 1).eval();
-    let d = [[3, 5, 7], [9, 11, 13]].eval();
-    assert_eq!(c, d);
-}
-
-pub fn make_binary_matrix_expr<Lhs, Rhs, F, Out>(
-    lhs: Lhs,
-    rhs: Rhs,
-    f: F,
-) -> ExprWrapper<impl MatrixExpr<Entry = Out>>
-where
-    Lhs: MatrixExpr,
-    Rhs: MatrixExpr,
-    F: Fn(Lhs::Entry, Rhs::Entry) -> Out,
-{
-    assert_eq!(lhs.num_rows(), rhs.num_rows());
-    assert_eq!(lhs.num_cols(), rhs.num_cols());
-    make_matrix_expr(lhs.num_rows(), lhs.num_cols(), move |row, col| {
-        f(lhs.entry(row, col), rhs.entry(row, col))
-    })
-}
-
-#[test]
-fn test_make_binary_matrix_expr() {
-    let a = [[1, 2, 3], [4, 5, 6]].eval();
-    let b = [[3, 1, 6], [2, 5, 4]].eval();
-    let c = make_binary_matrix_expr(a, b, |a, b| a ^ b).eval();
-    let d = [[1 ^ 3, 2 ^ 1, 3 ^ 6], [4 ^ 2, 5 ^ 5, 6 ^ 4]].eval();
-    assert_eq!(c, d);
+fn test_map_matrix_expr() {
+    let a = [[1, 2, 3], [4, 5, 6]].wrap().map(|a| 2 * a + 1).eval();
+    let b = [[3, 5, 7], [9, 11, 13]].eval();
+    assert_eq!(a, b);
 }
 
 impl<Lhs: MatrixExpr> ExprWrapper<Lhs> {
-    pub fn apply_bin_op_elemwise<Op: BinOp<Lhs::Entry, Rhs::Entry>, Rhs: MatrixExpr>(
-        self,
-        op: Op,
-        rhs: Rhs,
-    ) -> ExprWrapper<BinOpExpr<Op, Lhs, Rhs>> {
-        assert_eq!(self.num_rows(), rhs.num_rows(),
-            "Number of rows on the left hand side should be equal to the number of rows on the right hand side");
-        assert_eq!(self.num_cols(), rhs.num_cols(),
-            "Number of columns on the left hand side should be equal to the number of columns on the right hand side");
-        BinOpExpr::new(op, self.0, rhs).wrap()
-    }
-
-    pub fn apply_bin_fn_elemwise<F: Fn(Lhs::Entry, Rhs::Entry) -> Out, Rhs: MatrixExpr, Out>(
+    pub fn zip<Rhs>(
         self,
         rhs: Rhs,
-        f: F,
-    ) -> ExprWrapper<impl MatrixExpr<Entry = Out>> {
-        self.apply_bin_op_elemwise(BinFnOp::new(f), rhs)
+    ) -> ExprWrapper<impl MatrixExpr<Entry = (Lhs::Entry, Rhs::Entry)>>
+    where
+        Rhs: MatrixExpr,
+    {
+        assert_eq!(self.num_rows(), rhs.num_rows());
+        assert_eq!(self.num_cols(), rhs.num_cols());
+        make_matrix_expr(self.0.num_rows(), self.0.num_cols(), move |row, col| (self.0.entry(row, col), rhs.entry(row, col)))
     }
+}
 
-    pub fn mul_elemwise<Rhs: MatrixExpr>(
+#[test]
+fn test_zip_matrix_expr() {
+    let a = [[1, 2, 3], [4, 5, 6]].eval().wrap().zip([[7,8,9],[10,11,12]].eval()).eval();
+    let b = [[(1,7), (2,8), (3,9)], [(4,10), (5,11), (6,12)]].eval();
+    assert_eq!(a, b);
+}
+
+impl<Lhs: MatrixExpr> ExprWrapper<Lhs> {
+   pub fn mul_elemwise<Rhs: MatrixExpr>(
         self,
         rhs: Rhs,
     ) -> ExprWrapper<impl MatrixExpr<Entry = <Lhs::Entry as Mul<Rhs::Entry>>::Output>>
     where
         Lhs::Entry: Mul<Rhs::Entry>,
     {
-        self.apply_bin_fn_elemwise(rhs, |x, y| x * y)
+        self.zip(rhs).map(|(lhs, rhs)| lhs * rhs)
     }
+}
 
+#[test]
+fn test_mul_elemwise_matrix_expr() {
+    let a = [[1,2,3],[4,5,6]].wrap();
+    let b = [[0,1,2],[3,4,5]].wrap();
+    let c = a.mul_elemwise(b).eval();
+    let d = [[0,2,6],[12,20,30]].eval();
+    assert_eq!(c, d);
+}
+
+impl<Lhs: MatrixExpr> ExprWrapper<Lhs> {
     pub fn div_elemwise<Rhs: MatrixExpr>(
         self,
         rhs: Rhs,
@@ -199,127 +185,108 @@ impl<Lhs: MatrixExpr> ExprWrapper<Lhs> {
     where
         Lhs::Entry: Div<Rhs::Entry>,
     {
-        self.apply_bin_fn_elemwise(rhs, |x, y| x / y)
+        self.zip(rhs).map(|(lhs, rhs)| lhs / rhs)
     }
 }
 
-pub trait BinOp<Lhs, Rhs> {
-    type Output;
-
-    fn apply(&self, lhs: Lhs, rhs: Rhs) -> Self::Output;
+#[test]
+fn test_div_elemwise_matrix_expr() {
+    let a = [[0,2,6],[12,20,30]].wrap();
+    let b = [[1,2,3],[4,5,6]].wrap();
+    let c = a.div_elemwise(b).eval();
+    let d = [[0,1,2],[3,4,5]].eval();
+    assert_eq!(c, d);
 }
 
-pub struct BinOpExpr<Op: BinOp<Lhs::Entry, Rhs::Entry>, Lhs: MatrixExpr, Rhs: MatrixExpr> {
-    op: Op,
-    lhs: Lhs,
-    rhs: Rhs,
-}
-
-impl<Op: BinOp<Lhs::Entry, Rhs::Entry>, Lhs: MatrixExpr, Rhs: MatrixExpr> BinOpExpr<Op, Lhs, Rhs> {
-    pub fn new(op: Op, lhs: Lhs, rhs: Rhs) -> Self {
-        Self { op, lhs, rhs }
-    }
-}
-
-impl<Op, Lhs, Rhs> MatrixExpr for BinOpExpr<Op, Lhs, Rhs>
-where
-    Lhs: MatrixExpr,
-    Rhs: MatrixExpr,
-    Op: BinOp<Lhs::Entry, Rhs::Entry>,
-{
-    type Entry = Op::Output;
-
-    fn entry(&self, row: usize, col: usize) -> Self::Entry {
-        self.op
-            .apply(self.lhs.entry(row, col), self.rhs.entry(row, col))
-    }
-
-    fn num_rows(&self) -> usize {
-        self.lhs.num_rows()
-    }
-
-    fn num_cols(&self) -> usize {
-        self.lhs.num_cols()
-    }
-}
-
-pub struct AddOp<Lhs: Add<Rhs>, Rhs>(PhantomData<(Lhs, Rhs)>);
-
-impl<Lhs: Add<Rhs>, Rhs> AddOp<Lhs, Rhs> {
-    pub fn new() -> Self {
-        Self(PhantomData)
-    }
-}
-
-impl<Lhs: Add<Rhs>, Rhs> BinOp<Lhs, Rhs> for AddOp<Lhs, Rhs> {
-    type Output = Lhs::Output;
-
-    fn apply(&self, lhs: Lhs, rhs: Rhs) -> Self::Output {
-        lhs + rhs
-    }
-}
-
-impl<Rhs, Lhs: MatrixExpr> Add<Rhs> for ExprWrapper<Lhs>
+impl<Rhs, Lhs> Add<Rhs> for ExprWrapper<Lhs>
 where
     Lhs: MatrixExpr,
     Rhs: MatrixExpr,
     Lhs::Entry: Add<Rhs::Entry>,
 {
-    type Output = ExprWrapper<BinOpExpr<AddOp<Lhs::Entry, Rhs::Entry>, Lhs, Rhs>>;
+    type Output = ExprWrapper<AddExpr<Lhs, Rhs>>;
 
     fn add(self, rhs: Rhs) -> Self::Output {
-        self.apply_bin_op_elemwise(AddOp::new(), rhs)
+        AddExpr(self.0, rhs).wrap()
     }
 }
 
-pub struct SubOp<Lhs: Sub<Rhs>, Rhs>(PhantomData<(Lhs, Rhs)>);
+#[test]
+fn test_add_expr_wrapper()
+{
+    let a = [[1,2,3],[4,5,6]].wrap();
+    let b = [[2,2,2],[3,3,3]].wrap();
+    let c = a + b;
+    let d = [[3,4,5],[7,8,9]].wrap();
+    assert_eq!(c.eval(), d.eval());
+}
 
-impl<Lhs: Sub<Rhs>, Rhs> SubOp<Lhs, Rhs> {
-    pub fn new() -> Self {
-        Self(PhantomData)
+pub struct AddExpr<Lhs, Rhs>(Lhs, Rhs);
+
+impl<Lhs, Rhs> MatrixExpr for AddExpr<Lhs, Rhs>
+where
+    Lhs: MatrixExpr,
+    Rhs: MatrixExpr,
+    Lhs::Entry: Add<Rhs::Entry>,
+{
+    type Entry = <Lhs::Entry as Add<Rhs::Entry>>::Output;
+
+    fn entry(&self, row: usize, col: usize) -> Self::Entry {
+        self.0.entry(row, col) + self.1.entry(row, col)
+    }
+
+    fn num_rows(&self) -> usize {
+        self.0.num_rows()
+    }
+
+    fn num_cols(&self) -> usize {
+        self.0.num_cols()
     }
 }
 
-impl<Lhs: Sub<Rhs>, Rhs> BinOp<Lhs, Rhs> for SubOp<Lhs, Rhs> {
-    type Output = Lhs::Output;
-
-    fn apply(&self, lhs: Lhs, rhs: Rhs) -> Self::Output {
-        lhs - rhs
-    }
-}
-
-impl<Rhs, Lhs: MatrixExpr> Sub<Rhs> for ExprWrapper<Lhs>
+impl<Rhs, Lhs> Sub<Rhs> for ExprWrapper<Lhs>
 where
     Lhs: MatrixExpr,
     Rhs: MatrixExpr,
     Lhs::Entry: Sub<Rhs::Entry>,
 {
-    type Output = ExprWrapper<BinOpExpr<SubOp<Lhs::Entry, Rhs::Entry>, Lhs, Rhs>>;
+    type Output = ExprWrapper<SubExpr<Lhs, Rhs>>;
 
     fn sub(self, rhs: Rhs) -> Self::Output {
-        self.apply_bin_op_elemwise(SubOp::new(), rhs)
+        SubExpr(self.0, rhs).wrap()
     }
 }
 
-pub struct BinFnOp<F: Fn(Lhs, Rhs) -> Out, Lhs, Rhs, Out> {
-    f: F,
-    _phantom: PhantomData<(Lhs, Rhs, Out)>,
+#[test]
+fn test_sub_expr_wrapper()
+{
+    let a = [[1,2,3],[4,5,6]].wrap();
+    let b = [[2,2,2],[3,3,3]].wrap();
+    let c = a - b;
+    let d = [[-1,0,1],[1,2,3]].wrap();
+    assert_eq!(c.eval(), d.eval());
 }
 
-impl<F: Fn(Lhs, Rhs) -> Out, Lhs, Rhs, Out> BinFnOp<F, Lhs, Rhs, Out> {
-    pub fn new(f: F) -> Self {
-        Self {
-            f,
-            _phantom: PhantomData,
-        }
+pub struct SubExpr<Lhs, Rhs>(Lhs, Rhs);
+
+impl<Lhs, Rhs> MatrixExpr for SubExpr<Lhs, Rhs>
+where
+    Lhs: MatrixExpr,
+    Rhs: MatrixExpr,
+    Lhs::Entry: Sub<Rhs::Entry>,
+{
+    type Entry = <Lhs::Entry as Sub<Rhs::Entry>>::Output;
+
+    fn entry(&self, row: usize, col: usize) -> Self::Entry {
+        self.0.entry(row, col) - self.1.entry(row, col)
     }
-}
 
-impl<F: Fn(Lhs, Rhs) -> Out, Lhs, Rhs, Out> BinOp<Lhs, Rhs> for BinFnOp<F, Lhs, Rhs, Out> {
-    type Output = Out;
+    fn num_rows(&self) -> usize {
+        self.0.num_rows()
+    }
 
-    fn apply(&self, lhs: Lhs, rhs: Rhs) -> Self::Output {
-        (self.f)(lhs, rhs)
+    fn num_cols(&self) -> usize {
+        self.0.num_cols()
     }
 }
 
