@@ -158,7 +158,7 @@ where
 pub struct AddOp<Lhs: Add<Rhs>, Rhs>(PhantomData<(Lhs, Rhs)>);
 
 impl<Lhs: Add<Rhs>, Rhs> AddOp<Lhs, Rhs> {
-    fn new() -> Self {
+    pub fn new() -> Self {
         Self(PhantomData)
     }
 }
@@ -187,7 +187,7 @@ where
 pub struct SubOp<Lhs: Sub<Rhs>, Rhs>(PhantomData<(Lhs, Rhs)>);
 
 impl<Lhs: Sub<Rhs>, Rhs> SubOp<Lhs, Rhs> {
-    fn new() -> Self {
+    pub fn new() -> Self {
         Self(PhantomData)
     }
 }
