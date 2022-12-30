@@ -91,7 +91,7 @@ impl<Lhs: MatrixExpr> ExprWrapper<Lhs> {
         rhs: Rhs,
         f: F,
     ) -> ExprWrapper<impl MatrixExpr<Entry = Out>> {
-        self.apply_bin_op_elemwise(BinFunOp::new(f), rhs)
+        self.apply_bin_op_elemwise(BinFnOp::new(f), rhs)
     }
 
     pub fn mul_elemwise<Rhs: MatrixExpr>(
@@ -213,12 +213,12 @@ where
     }
 }
 
-pub struct BinFunOp<F: Fn(Lhs, Rhs) -> Out, Lhs, Rhs, Out> {
+pub struct BinFnOp<F: Fn(Lhs, Rhs) -> Out, Lhs, Rhs, Out> {
     f: F,
     _phantom: PhantomData<(Lhs, Rhs, Out)>,
 }
 
-impl<F: Fn(Lhs, Rhs) -> Out, Lhs, Rhs, Out> BinFunOp<F, Lhs, Rhs, Out> {
+impl<F: Fn(Lhs, Rhs) -> Out, Lhs, Rhs, Out> BinFnOp<F, Lhs, Rhs, Out> {
     pub fn new(f: F) -> Self {
         Self {
             f,
@@ -227,7 +227,7 @@ impl<F: Fn(Lhs, Rhs) -> Out, Lhs, Rhs, Out> BinFunOp<F, Lhs, Rhs, Out> {
     }
 }
 
-impl<F: Fn(Lhs, Rhs) -> Out, Lhs, Rhs, Out> BinOp<Lhs, Rhs> for BinFunOp<F, Lhs, Rhs, Out> {
+impl<F: Fn(Lhs, Rhs) -> Out, Lhs, Rhs, Out> BinOp<Lhs, Rhs> for BinFnOp<F, Lhs, Rhs, Out> {
     type Output = Out;
 
     fn apply(&self, lhs: Lhs, rhs: Rhs) -> Self::Output {
