@@ -73,6 +73,94 @@ impl<T: MatrixExpr> MatrixExpr for ExprWrapper<T> {
     }
 }
 
+pub fn make_matrix_expr<F, Out>(
+    num_rows: usize,
+    num_cols: usize,
+    f: F,
+) -> ExprWrapper<impl MatrixExpr<Entry = Out>>
+where
+    F: Fn(usize, usize) -> Out,
+{
+    struct FnMatrixExpr<F_, Out_>(F_, usize, usize)
+    where
+        F_: Fn(usize, usize) -> Out_;
+
+    impl<F_, Out_> MatrixExpr for FnMatrixExpr<F_, Out_>
+    where
+        F_: Fn(usize, usize) -> Out_,
+    {
+        type Entry = Out_;
+
+        fn entry(&self, row: usize, col: usize) -> Self::Entry {
+            (self.0)(row, col)
+        }
+
+        fn num_rows(&self) -> usize {
+            self.1
+        }
+
+        fn num_cols(&self) -> usize {
+            self.2
+        }
+    }
+
+    FnMatrixExpr(f, num_rows, num_cols).wrap()
+}
+
+#[test]
+fn test_make_matrix_expr() {
+    let a = make_matrix_expr(2, 3, |x, y| x + y).eval();
+    let b = [[0, 1, 2], [1, 2, 3]].eval();
+    assert_eq!(a, b);
+}
+
+pub fn make_unary_matrix_expr<Expr, F, Out>(
+    expr: Expr,
+    f: F,
+) -> ExprWrapper<impl MatrixExpr<Entry = Out>>
+where
+    Expr: MatrixExpr,
+    F: Fn(Expr::Entry) -> Out,
+{
+    make_matrix_expr(expr.num_rows(), expr.num_cols(), move |row, col| {
+        f(expr.entry(row, col))
+    })
+}
+
+#[test]
+fn test_make_unary_matrix_expr() {
+    let a = [[1, 2, 3], [4, 5, 6]].eval();
+    let c = make_unary_matrix_expr(a, |a| 2 * a + 1).eval();
+    let d = [[3, 5, 7], [9, 11, 13]].eval();
+    assert_eq!(c, d);
+}
+
+pub fn make_binary_matrix_expr<Lhs, Rhs, F, Out>(
+    lhs: Lhs,
+    rhs: Rhs,
+    f: F,
+) -> ExprWrapper<impl MatrixExpr<Entry = Out>>
+where
+    Lhs: MatrixExpr,
+    Rhs: MatrixExpr,
+    F: Fn(Lhs::Entry, Rhs::Entry) -> Out,
+{
+    assert_eq!(lhs.num_rows(), rhs.num_rows());
+    assert_eq!(lhs.num_cols(), rhs.num_cols());
+    make_matrix_expr(lhs.num_rows(), lhs.num_cols(), move |row, col| {
+        f(lhs.entry(row, col), rhs.entry(row, col))
+    })
+}
+
+#[test]
+fn test_make_binary_matrix_expr() {
+    let a = [[1, 2, 3], [4, 5, 6]].eval();
+    let b = [[3, 1, 6], [2, 5, 4]].eval();
+    let c = make_binary_matrix_expr(a, b, |a, b| a ^ b).eval();
+    let d = [[1 ^ 3, 2 ^ 1, 3 ^ 6], [4 ^ 2, 5 ^ 5, 6 ^ 4]].eval();
+    assert_eq!(c, d);
+}
+
 impl<Lhs: MatrixExpr> ExprWrapper<Lhs> {
     pub fn apply_bin_op_elemwise<Op: BinOp<Lhs::Entry, Rhs::Entry>, Rhs: MatrixExpr>(
         self,
