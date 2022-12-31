@@ -1,7 +1,4 @@
-use std::{
-    marker::PhantomData,
-    ops::{Add, AddAssign, Div, Index, IndexMut, Mul, Sub, SubAssign},
-};
+use std::ops::{Add, AddAssign, Div, Index, IndexMut, Mul, Sub, SubAssign};
 
 use crate::algebra::{Conj, One, Zero};
 
@@ -384,43 +381,6 @@ where
     }
 }
 
-struct EyeExpr<T: One + Zero> {
-    n: usize,
-    _phantom: PhantomData<T>,
-}
-
-impl<T: One + Zero> EyeExpr<T> {
-    fn new(n: usize) -> Self {
-        Self {
-            n,
-            _phantom: PhantomData,
-        }
-    }
-}
-
-impl<T> MatrixExpr for EyeExpr<T>
-where
-    T: One + Zero,
-{
-    type Entry = T;
-
-    fn entry(&self, row: usize, col: usize) -> Self::Entry {
-        if row == col {
-            T::one()
-        } else {
-            T::zero()
-        }
-    }
-
-    fn num_rows(&self) -> usize {
-        self.n
-    }
-
-    fn num_cols(&self) -> usize {
-        self.n
-    }
-}
-
 impl<T> DMatrix<T>
 where
     T: One + Zero,
@@ -429,7 +389,7 @@ where
     ///
     /// This is a matrix which is $1$ on the diagonal and $0$ everywhere else.
     pub fn eye(n: usize) -> ExprWrapper<impl MatrixExpr<Entry = T>> {
-        EyeExpr::new(n).wrap()
+        make_matrix_expr(n, n, |r, c| if r == c { T::one() } else { T::zero() })
     }
 }
 
