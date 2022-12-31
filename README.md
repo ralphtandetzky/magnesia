@@ -34,7 +34,7 @@ The goal of Magnesia is to provide an easy to use yet efficient API for mathemat
 Add this to your `Cargo.toml`:
 ```text
 [dependencies]
-magnesia = "0.8.1"
+magnesia = "0.8.2"
 ```
 
 ## Documentation
