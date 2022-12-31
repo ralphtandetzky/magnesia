@@ -695,6 +695,7 @@ where
     T: Clone,
 {
     /// Returns the transposed matrix as a matrix expression.
+    #[allow(clippy::needless_lifetimes)] // false positive
     pub fn t<'a>(&'a self) -> ExprWrapper<impl MatrixExpr<Entry = T> + 'a> {
         self.wrap().t()
     }
@@ -712,6 +713,7 @@ where
     T: Clone + Conj,
 {
     /// Returns the transposed matrix as a matrix expression.
+    #[allow(clippy::needless_lifetimes)] // false positive
     pub fn h<'a>(&'a self) -> ExprWrapper<impl MatrixExpr<Entry = T> + 'a> {
         self.wrap().h()
     }
