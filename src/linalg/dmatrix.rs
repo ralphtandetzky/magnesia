@@ -36,19 +36,6 @@ pub trait MatrixExpr: Sized {
     fn wrap(self) -> ExprWrapper<Self> {
         ExprWrapper(self)
     }
-
-    /// Returns the transposed of the `self` matrix.
-    fn t(self) -> ExprWrapper<TransposedExpr<Self>> {
-        TransposedExpr(self).wrap()
-    }
-
-    /// Returns the conjugate transpose (also called Hermetian transpose).
-    fn h(self) -> ExprWrapper<ConjugateTransposedExpr<Self>>
-    where
-        Self::Entry: Conj,
-    {
-        ConjugateTransposedExpr(self).wrap()
-    }
 }
 
 pub struct ExprWrapper<T: MatrixExpr>(T);
@@ -295,59 +282,52 @@ where
     }
 }
 
-pub struct TransposedExpr<Expr: MatrixExpr>(Expr);
-
-impl<Expr: MatrixExpr> MatrixExpr for TransposedExpr<Expr> {
-    type Entry = Expr::Entry;
-
-    fn entry(&self, row: usize, col: usize) -> Self::Entry {
-        self.0.entry(col, row)
-    }
-
-    fn num_rows(&self) -> usize {
-        self.0.num_cols()
-    }
-
-    fn num_cols(&self) -> usize {
-        self.0.num_rows()
+impl<Expr> ExprWrapper<Expr>
+where
+    Expr: MatrixExpr,
+{
+    pub fn t(self) -> ExprWrapper<impl MatrixExpr<Entry = Expr::Entry>> {
+        make_matrix_expr(self.0.num_cols(), self.0.num_rows(), move |r, c| {
+            self.entry(c, r)
+        })
     }
 }
 
 #[test]
-fn test_transpose() {
-    let a = [[1, 2, 3], [4, 5, 6]].t().eval();
-    let b = [[1, 4], [2, 5], [3, 6]].eval();
-    assert_eq!(a, b);
+fn test_expr_wrapper_transpose() {
+    let a = [[1, 2, 3], [4, 5, 6]].wrap().t();
+    let b = [[1, 4], [2, 5], [3, 6]].wrap();
+    assert_eq!(a.eval(), b.eval());
 }
 
-pub struct ConjugateTransposedExpr<Expr: MatrixExpr>(Expr);
-
-impl<Expr: MatrixExpr> MatrixExpr for ConjugateTransposedExpr<Expr>
+impl<Expr> ExprWrapper<Expr>
 where
+    Expr: MatrixExpr,
     Expr::Entry: Conj,
 {
-    type Entry = Expr::Entry;
-
-    fn entry(&self, row: usize, col: usize) -> Self::Entry {
-        self.0.entry(col, row).conj()
-    }
-
-    fn num_rows(&self) -> usize {
-        self.0.num_cols()
-    }
-
-    fn num_cols(&self) -> usize {
-        self.0.num_rows()
+    pub fn h(self) -> ExprWrapper<impl MatrixExpr<Entry = Expr::Entry>> {
+        make_matrix_expr(self.0.num_cols(), self.0.num_rows(), move |r, c| {
+            self.entry(c, r).conj()
+        })
     }
 }
 
 #[test]
-fn test_conjugate_transpose() {
+fn test_expr_wrapper_conjugate_transpose() {
     use crate::algebra::Complex;
-
-    let a = [[Complex::new(1, 2)], [Complex::new(3, 4)]].h().eval();
-    let b = [[Complex::new(1, -2), Complex::new(3, -4)]].eval();
-    assert_eq!(a, b);
+    let a = [
+        [Complex::new(0, 1), Complex::new(2, 3), Complex::new(4, 5)],
+        [Complex::new(6, 7), Complex::new(8, 9), Complex::new(10, 11)],
+    ]
+    .wrap()
+    .h();
+    let b = [
+        [Complex::new(0, -1), Complex::new(6, -7)],
+        [Complex::new(2, -3), Complex::new(8, -9)],
+        [Complex::new(4, -5), Complex::new(10, -11)],
+    ]
+    .wrap();
+    assert_eq!(a.eval(), b.eval());
 }
 
 /// A matrix type with dynamic number of rows and columns.
@@ -690,6 +670,52 @@ impl<T> DMatrix<T> {
     {
         self.wrap().div_elemwise(lhs)
     }
+}
+
+impl<T> DMatrix<T>
+where
+    T: Clone,
+{
+    /// Returns the transposed matrix as a matrix expression.
+    pub fn t<'a>(&'a self) -> ExprWrapper<impl MatrixExpr<Entry = T> + 'a> {
+        self.wrap().t()
+    }
+}
+
+#[test]
+fn test_dmatrix_transpose() {
+    let a = [[1, 2, 3], [4, 5, 6]].eval().t().eval();
+    let b = [[1, 4], [2, 5], [3, 6]].eval();
+    assert_eq!(a, b);
+}
+
+impl<T> DMatrix<T>
+where
+    T: Clone + Conj,
+{
+    /// Returns the transposed matrix as a matrix expression.
+    pub fn h<'a>(&'a self) -> ExprWrapper<impl MatrixExpr<Entry = T> + 'a> {
+        self.wrap().h()
+    }
+}
+
+#[test]
+fn test_dmatrix_conjugate_transpose() {
+    use crate::algebra::Complex;
+    let a = [
+        [Complex::new(0, 1), Complex::new(2, 3), Complex::new(4, 5)],
+        [Complex::new(6, 7), Complex::new(8, 9), Complex::new(10, 11)],
+    ]
+    .wrap()
+    .h()
+    .eval();
+    let b = [
+        [Complex::new(0, -1), Complex::new(6, -7)],
+        [Complex::new(2, -3), Complex::new(8, -9)],
+        [Complex::new(4, -5), Complex::new(10, -11)],
+    ]
+    .eval();
+    assert_eq!(a, b);
 }
 
 impl<T: Clone, const NUM_ROWS: usize, const NUM_COLS: usize> MatrixExpr
