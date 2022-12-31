@@ -403,6 +403,24 @@ fn test_dmatrix_eye() {
     );
 }
 
+impl<T> DMatrix<T>
+where
+    T: Zero,
+{
+    /// Returns a matrix expression filled with zeros.
+    pub fn zeros(num_rows: usize, num_cols: usize) -> ExprWrapper<impl MatrixExpr<Entry = T>> {
+        make_matrix_expr(num_rows, num_cols, |_, _| T::zero())
+    }
+}
+
+#[test]
+fn test_dmatrix_zeros() {
+    assert_eq!(
+        DMatrix::<i32>::zeros(2, 3).eval(),
+        [[0, 0, 0], [0, 0, 0]].eval()
+    );
+}
+
 impl<T> Index<[usize; 2]> for DMatrix<T> {
     type Output = T;
 
