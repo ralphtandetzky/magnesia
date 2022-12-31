@@ -429,6 +429,46 @@ impl<T> Index<[usize; 2]> for DMatrix<T> {
     }
 }
 
+impl<T> DMatrix<T>
+where
+    T: One,
+{
+    /// Returns a matrix expression filled with ones.
+    pub fn ones(num_rows: usize, num_cols: usize) -> ExprWrapper<impl MatrixExpr<Entry = T>> {
+        make_matrix_expr(num_rows, num_cols, |_, _| T::one())
+    }
+}
+
+#[test]
+fn test_dmatrix_ones() {
+    assert_eq!(
+        DMatrix::<i32>::ones(2, 3).eval(),
+        [[1, 1, 1], [1, 1, 1]].eval()
+    );
+}
+
+impl<T> DMatrix<T>
+where
+    T: Clone,
+{
+    /// Returns a matrix expression filled with the passed value `val`.
+    pub fn same(
+        num_rows: usize,
+        num_cols: usize,
+        val: T,
+    ) -> ExprWrapper<impl MatrixExpr<Entry = T>> {
+        make_matrix_expr(num_rows, num_cols, move |_, _| val.clone())
+    }
+}
+
+#[test]
+fn test_dmatrix_same() {
+    assert_eq!(
+        DMatrix::<i32>::same(2, 3, 42).eval(),
+        [[42, 42, 42], [42, 42, 42]].eval()
+    );
+}
+
 #[test]
 fn test_index_dmatrix() {
     let a = [[1, 2], [3, 4]].eval();
