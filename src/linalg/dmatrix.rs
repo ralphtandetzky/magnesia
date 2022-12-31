@@ -115,10 +115,7 @@ fn test_make_matrix_expr() {
 }
 
 impl<Lhs: MatrixExpr> ExprWrapper<Lhs> {
-    pub fn map<F, Out>(
-        self,
-        f: F,
-    ) -> ExprWrapper<impl MatrixExpr<Entry = Out>>
+    pub fn map<F, Out>(self, f: F) -> ExprWrapper<impl MatrixExpr<Entry = Out>>
     where
         F: Fn(Lhs::Entry) -> Out,
     {
@@ -145,19 +142,25 @@ impl<Lhs: MatrixExpr> ExprWrapper<Lhs> {
     {
         assert_eq!(self.num_rows(), rhs.num_rows());
         assert_eq!(self.num_cols(), rhs.num_cols());
-        make_matrix_expr(self.0.num_rows(), self.0.num_cols(), move |row, col| (self.0.entry(row, col), rhs.entry(row, col)))
+        make_matrix_expr(self.0.num_rows(), self.0.num_cols(), move |row, col| {
+            (self.0.entry(row, col), rhs.entry(row, col))
+        })
     }
 }
 
 #[test]
 fn test_zip_matrix_expr() {
-    let a = [[1, 2, 3], [4, 5, 6]].eval().wrap().zip([[7,8,9],[10,11,12]].eval()).eval();
-    let b = [[(1,7), (2,8), (3,9)], [(4,10), (5,11), (6,12)]].eval();
+    let a = [[1, 2, 3], [4, 5, 6]]
+        .eval()
+        .wrap()
+        .zip([[7, 8, 9], [10, 11, 12]].eval())
+        .eval();
+    let b = [[(1, 7), (2, 8), (3, 9)], [(4, 10), (5, 11), (6, 12)]].eval();
     assert_eq!(a, b);
 }
 
 impl<Lhs: MatrixExpr> ExprWrapper<Lhs> {
-   pub fn mul_elemwise<Rhs: MatrixExpr>(
+    pub fn mul_elemwise<Rhs: MatrixExpr>(
         self,
         rhs: Rhs,
     ) -> ExprWrapper<impl MatrixExpr<Entry = <Lhs::Entry as Mul<Rhs::Entry>>::Output>>
@@ -170,10 +173,10 @@ impl<Lhs: MatrixExpr> ExprWrapper<Lhs> {
 
 #[test]
 fn test_mul_elemwise_matrix_expr() {
-    let a = [[1,2,3],[4,5,6]].wrap();
-    let b = [[0,1,2],[3,4,5]].wrap();
+    let a = [[1, 2, 3], [4, 5, 6]].wrap();
+    let b = [[0, 1, 2], [3, 4, 5]].wrap();
     let c = a.mul_elemwise(b).eval();
-    let d = [[0,2,6],[12,20,30]].eval();
+    let d = [[0, 2, 6], [12, 20, 30]].eval();
     assert_eq!(c, d);
 }
 
@@ -191,10 +194,10 @@ impl<Lhs: MatrixExpr> ExprWrapper<Lhs> {
 
 #[test]
 fn test_div_elemwise_matrix_expr() {
-    let a = [[0,2,6],[12,20,30]].wrap();
-    let b = [[1,2,3],[4,5,6]].wrap();
+    let a = [[0, 2, 6], [12, 20, 30]].wrap();
+    let b = [[1, 2, 3], [4, 5, 6]].wrap();
     let c = a.div_elemwise(b).eval();
-    let d = [[0,1,2],[3,4,5]].eval();
+    let d = [[0, 1, 2], [3, 4, 5]].eval();
     assert_eq!(c, d);
 }
 
@@ -207,17 +210,18 @@ where
     type Output = ExprWrapper<AddExpr<Lhs, Rhs>>;
 
     fn add(self, rhs: Rhs) -> Self::Output {
+        assert_eq!(self.num_rows(), rhs.num_rows());
+        assert_eq!(self.num_cols(), rhs.num_cols());
         AddExpr(self.0, rhs).wrap()
     }
 }
 
 #[test]
-fn test_add_expr_wrapper()
-{
-    let a = [[1,2,3],[4,5,6]].wrap();
-    let b = [[2,2,2],[3,3,3]].wrap();
+fn test_add_expr_wrapper() {
+    let a = [[1, 2, 3], [4, 5, 6]].wrap();
+    let b = [[2, 2, 2], [3, 3, 3]].wrap();
     let c = a + b;
-    let d = [[3,4,5],[7,8,9]].wrap();
+    let d = [[3, 4, 5], [7, 8, 9]].wrap();
     assert_eq!(c.eval(), d.eval());
 }
 
@@ -253,17 +257,18 @@ where
     type Output = ExprWrapper<SubExpr<Lhs, Rhs>>;
 
     fn sub(self, rhs: Rhs) -> Self::Output {
+        assert_eq!(self.num_rows(), rhs.num_rows());
+        assert_eq!(self.num_cols(), rhs.num_cols());
         SubExpr(self.0, rhs).wrap()
     }
 }
 
 #[test]
-fn test_sub_expr_wrapper()
-{
-    let a = [[1,2,3],[4,5,6]].wrap();
-    let b = [[2,2,2],[3,3,3]].wrap();
+fn test_sub_expr_wrapper() {
+    let a = [[1, 2, 3], [4, 5, 6]].wrap();
+    let b = [[2, 2, 2], [3, 3, 3]].wrap();
     let c = a - b;
-    let d = [[-1,0,1],[1,2,3]].wrap();
+    let d = [[-1, 0, 1], [1, 2, 3]].wrap();
     assert_eq!(c.eval(), d.eval());
 }
 
@@ -353,59 +358,6 @@ pub struct DMatrix<T> {
     num_cols: usize,
 }
 
-struct EyeExpr<T: One + Zero> {
-    n: usize,
-    _phantom: PhantomData<T>,
-}
-
-impl<T: One + Zero> EyeExpr<T> {
-    fn new(n: usize) -> Self {
-        Self {
-            n,
-            _phantom: PhantomData,
-        }
-    }
-}
-
-impl<T: One + Zero> MatrixExpr for EyeExpr<T> {
-    type Entry = T;
-
-    fn entry(&self, row: usize, col: usize) -> Self::Entry {
-        if row == col {
-            T::one()
-        } else {
-            T::zero()
-        }
-    }
-
-    fn num_rows(&self) -> usize {
-        self.n
-    }
-
-    fn num_cols(&self) -> usize {
-        self.n
-    }
-}
-
-impl<T: One + Zero> DMatrix<T> {
-    /// Creates a unit matrix expression of size $n\times n$.
-    ///
-    /// This is a matrix which is $1$ on the diagonal and $0$ everywhere else.
-    pub fn eye(n: usize) -> ExprWrapper<impl MatrixExpr<Entry = T>> {
-        EyeExpr::new(n).wrap()
-    }
-}
-
-#[test]
-fn test_dmatrix_eye() {
-    assert_eq!(DMatrix::<i32>::eye(1).eval(), [[1]].eval());
-    assert_eq!(DMatrix::<i32>::eye(2).eval(), [[1, 0], [0, 1]].eval());
-    assert_eq!(
-        DMatrix::<i32>::eye(3).eval(),
-        [[1, 0, 0], [0, 1, 0], [0, 0, 1]].eval()
-    );
-}
-
 impl<T> MatrixExpr for DMatrix<T>
 where
     T: Clone,
@@ -452,6 +404,65 @@ where
     }
 }
 
+struct EyeExpr<T: One + Zero> {
+    n: usize,
+    _phantom: PhantomData<T>,
+}
+
+impl<T: One + Zero> EyeExpr<T> {
+    fn new(n: usize) -> Self {
+        Self {
+            n,
+            _phantom: PhantomData,
+        }
+    }
+}
+
+impl<T> MatrixExpr for EyeExpr<T>
+where
+    T: One + Zero,
+{
+    type Entry = T;
+
+    fn entry(&self, row: usize, col: usize) -> Self::Entry {
+        if row == col {
+            T::one()
+        } else {
+            T::zero()
+        }
+    }
+
+    fn num_rows(&self) -> usize {
+        self.n
+    }
+
+    fn num_cols(&self) -> usize {
+        self.n
+    }
+}
+
+impl<T> DMatrix<T>
+where
+    T: One + Zero,
+{
+    /// Creates a unit matrix expression of size $n\times n$.
+    ///
+    /// This is a matrix which is $1$ on the diagonal and $0$ everywhere else.
+    pub fn eye(n: usize) -> ExprWrapper<impl MatrixExpr<Entry = T>> {
+        EyeExpr::new(n).wrap()
+    }
+}
+
+#[test]
+fn test_dmatrix_eye() {
+    assert_eq!(DMatrix::<i32>::eye(1).eval(), [[1]].eval());
+    assert_eq!(DMatrix::<i32>::eye(2).eval(), [[1, 0], [0, 1]].eval());
+    assert_eq!(
+        DMatrix::<i32>::eye(3).eval(),
+        [[1, 0, 0], [0, 1, 0], [0, 0, 1]].eval()
+    );
+}
+
 impl<T> Index<[usize; 2]> for DMatrix<T> {
     type Output = T;
 
@@ -490,8 +501,9 @@ fn test_index_mut_dmatrix() {
 
 impl<T, Rhs> Add<Rhs> for &DMatrix<T>
 where
-    T: Clone,
+    Rhs: MatrixExpr,
     ExprWrapper<Self>: Add<Rhs>,
+    T: Clone,
 {
     type Output = <ExprWrapper<Self> as Add<Rhs>>::Output;
 
@@ -587,7 +599,7 @@ impl<'a, T> MulDMatrix<'a, T> {
 
 impl<'a, T> MatrixExpr for MulDMatrix<'a, T>
 where
-    T: Clone + Mul<T>,
+    T: Mul<T> + Clone,
     <T as Mul<T>>::Output: AddAssign,
 {
     type Entry = <T as Mul<T>>::Output;
@@ -611,7 +623,7 @@ where
 
 impl<'a, T> Mul<Self> for &'a DMatrix<T>
 where
-    T: Clone + Mul<T>,
+    T: Mul<T> + Clone,
     <T as Mul<T>>::Output: AddAssign,
 {
     type Output = MulDMatrix<'a, T>;
@@ -649,7 +661,7 @@ impl<T> DMatrix<T> {
         lhs: Lhs,
     ) -> ExprWrapper<impl MatrixExpr<Entry = T::Output> + 'a>
     where
-        T: Clone + Mul<Lhs::Entry>,
+        T: Mul<Lhs::Entry> + Clone,
         Lhs: 'a,
     {
         self.wrap().mul_elemwise(lhs)
@@ -673,7 +685,7 @@ impl<T> DMatrix<T> {
         lhs: Lhs,
     ) -> ExprWrapper<impl MatrixExpr<Entry = T::Output> + 'a>
     where
-        T: Clone + Div<Lhs::Entry>,
+        T: Div<Lhs::Entry> + Clone,
         Lhs: 'a,
     {
         self.wrap().div_elemwise(lhs)
