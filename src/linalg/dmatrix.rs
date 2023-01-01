@@ -88,6 +88,7 @@ impl<T: MatrixExpr> MatrixExpr for MatrixExprWrapper<T> {
 /// the matrix.
 ///
 /// The matrix will take the form
+///
 /// $$
 ///     \begin{pmatrix}
 ///         f( 0 , 0 ) & \cdots & f( 0 ,c-1) \\
@@ -95,6 +96,7 @@ impl<T: MatrixExpr> MatrixExpr for MatrixExprWrapper<T> {
 ///         f(r-1, 0 ) & \cdots & f(r-1,c-1)
 ///     \end{pmatrix}
 /// $$
+///
 /// where $r$ is the number of rows and $c$ is the number of columns.
 // TODO: Check is the formula above renders correctly.
 pub fn make_matrix_expr<F, Out>(
