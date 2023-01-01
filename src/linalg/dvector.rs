@@ -2,6 +2,8 @@ use std::ops::{Add, AddAssign, Div, Index, IndexMut, Mul, Sub, SubAssign};
 
 use crate::algebra::{Conj, One, Zero};
 
+use super::{make_matrix_expr, MatrixExpr, MatrixExprWrapper};
+
 /// A vector-like interface.
 pub trait VectorExpr: Sized {
     /// The element type of the vector.
@@ -23,12 +25,22 @@ pub trait VectorExpr: Sized {
         DVector((0..self.len()).map(|index| self.entry(index)).collect())
     }
 
-    /// Wraps the vector expression into an [`ExprWrapper`].
+    /// Wraps the vector expression into an [`VectorExprWrapper`].
     fn wrap(self) -> VectorExprWrapper<Self> {
         VectorExprWrapper(self)
     }
 }
 
+/// A wrapper type for matrix expressions.
+///
+/// This `struct` wraps anything that implements the trait [`MatrixExpr`]
+/// and forwards any function calls.
+/// Additionally, it implements a large number of functions and operators and
+/// thus extends the interface of the wrapped object.
+///
+/// To understand the design of this data structure, please refer to the
+/// design rationale explained for [`MatrixExprWrapper`]. The same reasoning
+/// applies here.
 pub struct VectorExprWrapper<Expr: VectorExpr>(Expr);
 
 impl<Expr: VectorExpr> VectorExpr for VectorExprWrapper<Expr> {
@@ -47,6 +59,17 @@ impl<Expr: VectorExpr> VectorExpr for VectorExprWrapper<Expr> {
     }
 }
 
+/// Create a vector expression by providing a lambda and the size of the
+/// vector.
+///
+/// # Example
+/// ```
+/// # use magnesia::linalg::make_vector_expr;
+/// # use magnesia::linalg::VectorExpr;
+/// let v = make_vector_expr(5, |index| index * index).eval();
+/// let u = [0, 1, 4, 9, 16].eval();
+/// assert_eq!(u, v);
+/// ```
 pub fn make_vector_expr<F, Out>(len: usize, f: F) -> VectorExprWrapper<impl VectorExpr<Entry = Out>>
 where
     F: Fn(usize) -> Out,
@@ -81,6 +104,25 @@ fn test_make_vector_expr() {
 }
 
 impl<Lhs: VectorExpr> VectorExprWrapper<Lhs> {
+    /// Applies a functor to each element of a vector and returns the obtained
+    /// vector.
+    ///
+    /// Given the vector
+    /// $$
+    ///     \begin{pmatrix}
+    ///         a_{1}  \\
+    ///         \vdots \\
+    ///         a_{n}
+    ///     \end{pmatrix}
+    /// $$
+    /// this function will return the vector
+    /// $$
+    ///     \begin{pmatrix}
+    ///         f(a_{1}) \\
+    ///          \vdots  \\
+    ///         f(a_{n})
+    ///     \end{pmatrix}
+    /// $$
     pub fn map<F, Out>(self, f: F) -> VectorExprWrapper<impl VectorExpr<Entry = Out>>
     where
         F: Fn(Lhs::Entry) -> Out,
@@ -97,6 +139,31 @@ fn test_map_vector_expr() {
 }
 
 impl<Lhs: VectorExpr> VectorExprWrapper<Lhs> {
+    /// Given a two vectors of the same dimensions, this function will
+    /// return the vector of pairs of matching elements.
+    ///
+    /// In other words, the vectors
+    /// $$
+    ///     \begin{pmatrix}
+    ///         a_{1}  \\
+    ///         \vdots \\
+    ///         a_{n}
+    ///     \end{pmatrix}, \qquad
+    ///     \begin{pmatrix}
+    ///         b_{1}  \\
+    ///         \vdots \\
+    ///         b_{n}
+    ///     \end{pmatrix}
+    /// $$
+    /// will be mapped to
+    /// $$
+    ///     \begin{pmatrix}
+    ///         (a_{1}, b_{1}) \\
+    ///            \vdots      \\
+    ///         (a_{n}, b_{n})
+    ///     \end{pmatrix}.
+    /// $$
+    // TODO: Check if the above formulas render correctly.
     pub fn zip<Rhs>(
         self,
         rhs: Rhs,
@@ -207,6 +274,30 @@ where
 }
 
 impl<Lhs: VectorExpr> VectorExprWrapper<Lhs> {
+    /// Multiplies two vectors element-wise.
+    ///
+    /// In other words, the vectors
+    /// $$
+    ///     \begin{pmatrix}
+    ///         a_{1}  \\
+    ///         \vdots \\
+    ///         a_{n}
+    ///     \end{pmatrix}, \qquad
+    ///     \begin{pmatrix}
+    ///         b_{1}  \\
+    ///         \vdots \\
+    ///         b_{n}
+    ///     \end{pmatrix}
+    /// $$
+    /// will be mapped to
+    /// $$
+    ///     \begin{pmatrix}
+    ///         a_{1}b_{1} \\
+    ///           \vdots   \\
+    ///         a_{n}b_{n}
+    ///     \end{pmatrix}.
+    /// $$
+    // TODO: Check if the above formulas render correctly.
     pub fn mul_elemwise<Rhs: VectorExpr>(
         self,
         rhs: Rhs,
@@ -227,6 +318,30 @@ fn test_mul_elemwise_vector_expr_wrapper() {
 }
 
 impl<Lhs: VectorExpr> VectorExprWrapper<Lhs> {
+    /// Divides two vectors element-wise.
+    ///
+    /// In other words, the vectors
+    /// $$
+    ///     \begin{pmatrix}
+    ///         a_{1}  \\
+    ///         \vdots \\
+    ///         a_{n}
+    ///     \end{pmatrix}, \qquad
+    ///     \begin{pmatrix}
+    ///         b_{1}  \\
+    ///         \vdots \\
+    ///         b_{n}
+    ///     \end{pmatrix}
+    /// $$
+    /// will be mapped to
+    /// $$
+    ///     \begin{pmatrix}
+    ///         a_{1}/b_{1} \\
+    ///           \vdots    \\
+    ///         a_{n}/b_{n}
+    ///     \end{pmatrix}.
+    /// $$
+    // TODO: Check if the above formulas render correctly.
     pub fn div_elemwise<Rhs: VectorExpr>(
         self,
         rhs: Rhs,
@@ -247,6 +362,7 @@ fn test_div_elemwise_vector_expr_wrapper() {
 }
 
 impl<Lhs: VectorExpr> VectorExprWrapper<Lhs> {
+    /// Conjugates all entries of a vector and returns the resulting vector.
     pub fn conj(self) -> VectorExprWrapper<impl VectorExpr<Entry = Lhs::Entry>>
     where
         Lhs::Entry: Conj,
@@ -271,6 +387,46 @@ fn test_conjugate_vector_expr_wrapper() {
         .eval(),
         v
     );
+}
+
+impl<Expr> VectorExprWrapper<Expr>
+where
+    Expr: VectorExpr,
+    Expr::Entry: Zero,
+{
+    /// Returns a diagonal matrix whose diagonal are the entries of the given vector.
+    ///
+    /// In other words, we have the following mapping:
+    /// $$
+    ///     \begin{pmatrix}
+    ///         a_{1}  \\
+    ///         \vdots \\
+    ///         a_{n}
+    ///     \end{pmatrix}
+    ///     \qquad \mapsto \qquad
+    ///     \begin{pmatrix}
+    ///         a_{1}^*  \\
+    ///         \vdots \\
+    ///         a_{n}^*
+    ///     \end{pmatrix}
+    /// $$
+    // TODO: Check if the above formulas render correctly.
+    pub fn diag(self) -> MatrixExprWrapper<impl MatrixExpr<Entry = Expr::Entry>> {
+        make_matrix_expr(self.len(), self.len(), move |r, c| {
+            if r == c {
+                self.0.entry(r)
+            } else {
+                Expr::Entry::zero()
+            }
+        })
+    }
+}
+
+#[test]
+fn test_diag_vector_expr_wrapper() {
+    let v = [1, 2, 5].wrap().diag();
+    let m = [[1, 0, 0], [0, 2, 0], [0, 0, 5]].eval();
+    assert_eq!(v.eval(), m);
 }
 
 /// A vector type with dynamic number of entries.
@@ -605,6 +761,30 @@ fn test_dvector_conjugate() {
     ]
     .eval();
     assert_eq!(a, b);
+}
+
+impl<T> DVector<T>
+where
+    T: Clone + Zero,
+{
+    /// Returns a diagonal matrix with the vector elements on the diagonal.
+    ///
+    /// # Example
+    /// ```
+    /// # use magnesia::linalg::VectorExpr;
+    /// # use magnesia::linalg::MatrixExpr;
+    /// // Creates a matrix of the form
+    /// // [[1, 0, 0],
+    /// //  [0, 2, 0],
+    /// //  [0, 0, 5]]
+    /// let a = [1, 2, 5].eval().diag().eval();
+    /// # let b = [[1, 0, 0], [0, 2, 0], [0, 0, 5]].eval();
+    /// # assert_eq!(a, b);
+    /// ```
+    #[allow(clippy::needless_lifetimes)] // False positive warning
+    pub fn diag<'a>(&'a self) -> MatrixExprWrapper<impl MatrixExpr<Entry = T> + 'a> {
+        self.wrap().diag()
+    }
 }
 
 impl<T: Clone> VectorExpr for &[T] {

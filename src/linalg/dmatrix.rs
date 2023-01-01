@@ -2,6 +2,8 @@ use std::ops::{Add, AddAssign, Div, Index, IndexMut, Mul, Sub, SubAssign};
 
 use crate::algebra::{Conj, One, Zero};
 
+use super::{dvector::VectorExprWrapper, make_vector_expr, VectorExpr};
+
 /// A matrix-like interface.
 pub trait MatrixExpr: Sized {
     /// The element type of the matrix.
@@ -29,15 +31,40 @@ pub trait MatrixExpr: Sized {
         }
     }
 
-    /// Wraps the matrix expression into an [`ExprWrapper`].
-    fn wrap(self) -> ExprWrapper<Self> {
-        ExprWrapper(self)
+    /// Wraps the matrix expression into an [`MatrixExprWrapper`].
+    fn wrap(self) -> MatrixExprWrapper<Self> {
+        MatrixExprWrapper(self)
     }
 }
 
-pub struct ExprWrapper<T: MatrixExpr>(T);
+/// A wrapper type for matrix expressions.
+///
+/// This `struct` wraps anything that implements the trait [`MatrixExpr`]
+/// and forwards any function calls.
+/// Additionally, it implements a large number of functions and operators and
+/// thus extends the interface of the wrapped object.
+///
+/// # Design Rationale
+///
+/// Unfortunately, this cannot be done in the [`MatrixExpr`] trait directly,
+/// because traits like [`std::ops::Add`] cannot be implemented for all types
+/// satisfying the [`MatrixExpr`] trait, since it is a foreign trait.
+/// Also it is currently not possible to specify return types as
+/// `impl MatrixExpr<Entry=T>` in default implementations of a trait,
+/// but it is possible to do so for the `struct MatrixExpressionWrapped`.
+/// For some implementations the return type cannot be spelled out, because
+/// they involve lambdas defined inside the function implementation.
+/// This is particularly true for the function [`make_matrix_expr()`] which
+/// is widely used to implement other functions conveniently.
+/// It would certainly be possible to avoid all lambdas and encapsulate them
+/// into extra types, but this would be much more verbose.
+/// Thus some functions are implemented with `impl MatrixExpr` return types
+/// and those cannot be used inside trait default function implementations.
+/// This is why the library's implementation relies on the `MatrixExprWrapper`
+/// type.
+pub struct MatrixExprWrapper<T: MatrixExpr>(T);
 
-impl<T: MatrixExpr> MatrixExpr for ExprWrapper<T> {
+impl<T: MatrixExpr> MatrixExpr for MatrixExprWrapper<T> {
     type Entry = T::Entry;
 
     fn entry(&self, row: usize, col: usize) -> Self::Entry {
@@ -57,11 +84,24 @@ impl<T: MatrixExpr> MatrixExpr for ExprWrapper<T> {
     }
 }
 
+/// Creates a matrix expression from a function which returns the entries of
+/// the matrix.
+///
+/// The matrix will take the form
+/// $$
+///     \begin{pmatrix}
+///         f( 0 , 0 ) & \cdots & f( 0 ,c-1) \\
+///         \vdots     & \ddots & \vdots     \\
+///         f(r-1, 0 ) & \cdots & f(r-1,c-1)
+///     \end{pmatrix}
+/// $$
+/// where $r$ is the number of rows and $c$ is the number of columns.
+// TODO: Check is the formula above renders correctly.
 pub fn make_matrix_expr<F, Out>(
     num_rows: usize,
     num_cols: usize,
     f: F,
-) -> ExprWrapper<impl MatrixExpr<Entry = Out>>
+) -> MatrixExprWrapper<impl MatrixExpr<Entry = Out>>
 where
     F: Fn(usize, usize) -> Out,
 {
@@ -98,8 +138,27 @@ fn test_make_matrix_expr() {
     assert_eq!(a, b);
 }
 
-impl<Lhs: MatrixExpr> ExprWrapper<Lhs> {
-    pub fn map<F, Out>(self, f: F) -> ExprWrapper<impl MatrixExpr<Entry = Out>>
+impl<Lhs: MatrixExpr> MatrixExprWrapper<Lhs> {
+    /// Applies a functor to each element of a matrix and returns the obtained
+    /// matrix.
+    ///
+    /// Given the matrix
+    /// $$
+    ///     \begin{pmatrix}
+    ///         a_{11} & \cdots & a_{1n} \\
+    ///         \vdots & \ddots & \vdots \\
+    ///         a_{m1} & \cdots & a_{mn}
+    ///     \end{pmatrix}
+    /// $$
+    /// this function will return the matrix
+    /// $$
+    ///     \begin{pmatrix}
+    ///         f(a_{11}) & \cdots & f(a_{1n}) \\
+    ///          \vdots   & \ddots &  \vdots   \\
+    ///         f(a_{m1}) & \cdots & f(a_{mn})
+    ///     \end{pmatrix}
+    /// $$
+    pub fn map<F, Out>(self, f: F) -> MatrixExprWrapper<impl MatrixExpr<Entry = Out>>
     where
         F: Fn(Lhs::Entry) -> Out,
     {
@@ -116,11 +175,36 @@ fn test_map_matrix_expr() {
     assert_eq!(a, b);
 }
 
-impl<Lhs: MatrixExpr> ExprWrapper<Lhs> {
+impl<Lhs: MatrixExpr> MatrixExprWrapper<Lhs> {
+    /// Given a two matrices of the same dimensions, this function will
+    /// return the matrix of pairs of matching elements.
+    ///
+    /// In other words, the matrices
+    /// $$
+    ///     \begin{pmatrix}
+    ///         a_{11} & \cdots & a_{1n} \\
+    ///         \vdots & \ddots & \vdots \\
+    ///         a_{m1} & \cdots & a_{mn}
+    ///     \end{pmatrix}, \qquad
+    ///     \begin{pmatrix}
+    ///         b_{11} & \cdots & b_{1n} \\
+    ///         \vdots & \ddots & \vdots \\
+    ///         b_{m1} & \cdots & b_{mn}
+    ///     \end{pmatrix}
+    /// $$
+    /// will be mapped to
+    /// $$
+    ///     \begin{pmatrix}
+    ///         (a_{11}, b_{11}) & \cdots & (a_{1n}, b_{1n}) \\
+    ///              \vdots      & \ddots &      \vdots      \\
+    ///         (a_{m1}, b_{m1}) & \cdots & (a_{mn}, b_{mn})
+    ///     \end{pmatrix}.
+    /// $$
+    // TODO: Check if the above formulas render correctly.
     pub fn zip<Rhs>(
         self,
         rhs: Rhs,
-    ) -> ExprWrapper<impl MatrixExpr<Entry = (Lhs::Entry, Rhs::Entry)>>
+    ) -> MatrixExprWrapper<impl MatrixExpr<Entry = (Lhs::Entry, Rhs::Entry)>>
     where
         Rhs: MatrixExpr,
     {
@@ -143,13 +227,13 @@ fn test_zip_matrix_expr() {
     assert_eq!(a, b);
 }
 
-impl<Rhs, Lhs> Add<Rhs> for ExprWrapper<Lhs>
+impl<Rhs, Lhs> Add<Rhs> for MatrixExprWrapper<Lhs>
 where
     Lhs: MatrixExpr,
     Rhs: MatrixExpr,
     Lhs::Entry: Add<Rhs::Entry>,
 {
-    type Output = ExprWrapper<AddExpr<Lhs, Rhs>>;
+    type Output = MatrixExprWrapper<AddExpr<Lhs, Rhs>>;
 
     fn add(self, rhs: Rhs) -> Self::Output {
         assert_eq!(self.num_rows(), rhs.num_rows());
@@ -190,13 +274,13 @@ where
     }
 }
 
-impl<Rhs, Lhs> Sub<Rhs> for ExprWrapper<Lhs>
+impl<Rhs, Lhs> Sub<Rhs> for MatrixExprWrapper<Lhs>
 where
     Lhs: MatrixExpr,
     Rhs: MatrixExpr,
     Lhs::Entry: Sub<Rhs::Entry>,
 {
-    type Output = ExprWrapper<SubExpr<Lhs, Rhs>>;
+    type Output = MatrixExprWrapper<SubExpr<Lhs, Rhs>>;
 
     fn sub(self, rhs: Rhs) -> Self::Output {
         assert_eq!(self.num_rows(), rhs.num_rows());
@@ -237,11 +321,35 @@ where
     }
 }
 
-impl<Lhs: MatrixExpr> ExprWrapper<Lhs> {
+impl<Lhs: MatrixExpr> MatrixExprWrapper<Lhs> {
+    /// Multiplies two matrices element-wise.
+    ///
+    /// In other words, the matrices
+    /// $$
+    ///     \begin{pmatrix}
+    ///         a_{11} & \cdots & a_{1n} \\
+    ///         \vdots & \ddots & \vdots \\
+    ///         a_{m1} & \cdots & a_{mn}
+    ///     \end{pmatrix}, \qquad
+    ///     \begin{pmatrix}
+    ///         b_{11} & \cdots & b_{1n} \\
+    ///         \vdots & \ddots & \vdots \\
+    ///         b_{m1} & \cdots & b_{mn}
+    ///     \end{pmatrix}
+    /// $$
+    /// will be mapped to
+    /// $$
+    ///     \begin{pmatrix}
+    ///         a_{11}\cdot b_{11}) & \cdots & a_{1n}\cdot b_{1n}) \\
+    ///               \vdots        & \ddots &       \vdots        \\
+    ///         a_{m1}\cdot b_{m1}) & \cdots & a_{mn}\cdot b_{mn})
+    ///     \end{pmatrix}.
+    /// $$
+    // TODO: Check if the above formulas render correctly.
     pub fn mul_elemwise<Rhs: MatrixExpr>(
         self,
         rhs: Rhs,
-    ) -> ExprWrapper<impl MatrixExpr<Entry = <Lhs::Entry as Mul<Rhs::Entry>>::Output>>
+    ) -> MatrixExprWrapper<impl MatrixExpr<Entry = <Lhs::Entry as Mul<Rhs::Entry>>::Output>>
     where
         Lhs::Entry: Mul<Rhs::Entry>,
     {
@@ -258,11 +366,35 @@ fn test_mul_elemwise_matrix_expr() {
     assert_eq!(c, d);
 }
 
-impl<Lhs: MatrixExpr> ExprWrapper<Lhs> {
+impl<Lhs: MatrixExpr> MatrixExprWrapper<Lhs> {
+    /// Divides two matrices element-wise.
+    ///
+    /// In other words, the matrices
+    /// $$
+    ///     \begin{pmatrix}
+    ///         a_{11} & \cdots & a_{1n} \\
+    ///         \vdots & \ddots & \vdots \\
+    ///         a_{m1} & \cdots & a_{mn}
+    ///     \end{pmatrix}, \qquad
+    ///     \begin{pmatrix}
+    ///         b_{11} & \cdots & b_{1n} \\
+    ///         \vdots & \ddots & \vdots \\
+    ///         b_{m1} & \cdots & b_{mn}
+    ///     \end{pmatrix}
+    /// $$
+    /// will be mapped to
+    /// $$
+    ///     \begin{pmatrix}
+    ///         a_{11}/b_{11}) & \cdots & a_{1n}/b_{1n}) \\
+    ///             \vdots     & \ddots &     \vdots     \\
+    ///         a_{m1}/b_{m1}) & \cdots & a_{mn}/b_{mn})
+    ///     \end{pmatrix}.
+    /// $$
+    // TODO: Check if the above formulas render correctly.
     pub fn div_elemwise<Rhs: MatrixExpr>(
         self,
         rhs: Rhs,
-    ) -> ExprWrapper<impl MatrixExpr<Entry = <Lhs::Entry as Div<Rhs::Entry>>::Output>>
+    ) -> MatrixExprWrapper<impl MatrixExpr<Entry = <Lhs::Entry as Div<Rhs::Entry>>::Output>>
     where
         Lhs::Entry: Div<Rhs::Entry>,
     {
@@ -279,11 +411,16 @@ fn test_div_elemwise_matrix_expr() {
     assert_eq!(c, d);
 }
 
-impl<Expr> ExprWrapper<Expr>
+impl<Expr> MatrixExprWrapper<Expr>
 where
     Expr: MatrixExpr,
 {
-    pub fn t(self) -> ExprWrapper<impl MatrixExpr<Entry = Expr::Entry>> {
+    /// Returns the transposed matrix of a given matrix.
+    ///
+    /// If you are dealing with complex valued matrices, then the Hermitian
+    /// transpose [`MatrixExprWrapper::h()`] may be what you need instead,
+    /// because it also performs complex conjugation on the matrix elements.
+    pub fn t(self) -> MatrixExprWrapper<impl MatrixExpr<Entry = Expr::Entry>> {
         make_matrix_expr(self.0.num_cols(), self.0.num_rows(), move |r, c| {
             self.entry(c, r)
         })
@@ -297,12 +434,19 @@ fn test_expr_wrapper_transpose() {
     assert_eq!(a.eval(), b.eval());
 }
 
-impl<Expr> ExprWrapper<Expr>
+impl<Expr> MatrixExprWrapper<Expr>
 where
     Expr: MatrixExpr,
     Expr::Entry: Conj,
 {
-    pub fn h(self) -> ExprWrapper<impl MatrixExpr<Entry = Expr::Entry>> {
+    /// Returns the Hermitian transposed matrix of a given matrix.
+    ///
+    /// The matrix will be mirrored at the diagonal and the entries will be
+    /// conjugated. If you do not want complex conjugation, then the plain
+    /// transpose of a matrix can be obtained by the method
+    /// [`MatrixExprWrapper<Expr>::t()`].
+    /// For non-complex numbers conjugation is a no-op and does not hurt.
+    pub fn h(self) -> MatrixExprWrapper<impl MatrixExpr<Entry = Expr::Entry>> {
         make_matrix_expr(self.0.num_cols(), self.0.num_rows(), move |r, c| {
             self.entry(c, r).conj()
         })
@@ -325,6 +469,45 @@ fn test_expr_wrapper_conjugate_transpose() {
     ]
     .wrap();
     assert_eq!(a.eval(), b.eval());
+}
+
+impl<Expr> MatrixExprWrapper<Expr>
+where
+    Expr: MatrixExpr,
+{
+    /// Returns the vector containing the diagonal elements of a matrix.
+    ///
+    /// The matrix does not need to be square for this function to work.
+    ///
+    /// Given the matrix
+    /// $$
+    ///     \begin{pmatrix}
+    ///         a_{11} & \cdots & a_{1n} \\
+    ///         \vdots & \ddots & \vdots \\
+    ///         a_{m1} & \cdots & a_{mn}
+    ///     \end{pmatrix}
+    /// $$
+    /// the vector
+    /// $$
+    ///     \begin{pmatrix}
+    ///         a_{11}  \\
+    ///         a_{22}  \\
+    ///         \vdots  \\
+    ///         a_{kk}
+    ///     \end{pmatrix}
+    /// $$
+    /// where $k$ is the minimum of $m$ and $n$.
+    pub fn diag(self) -> VectorExprWrapper<impl VectorExpr<Entry = Expr::Entry>> {
+        make_vector_expr(self.0.num_rows().min(self.0.num_cols()), move |index| {
+            self.0.entry(index, index)
+        })
+    }
+}
+
+#[test]
+fn test_diag_expr_wrapper() {
+    let v = [[1, 2, 3], [4, 5, 6]].wrap().diag();
+    assert_eq!([1, 5].eval(), v.eval());
 }
 
 /// A matrix type with dynamic number of rows and columns.
@@ -388,7 +571,7 @@ where
     /// Creates a unit matrix expression of size $n\times n$.
     ///
     /// This is a matrix which is $1$ on the diagonal and $0$ everywhere else.
-    pub fn eye(n: usize) -> ExprWrapper<impl MatrixExpr<Entry = T>> {
+    pub fn eye(n: usize) -> MatrixExprWrapper<impl MatrixExpr<Entry = T>> {
         make_matrix_expr(n, n, |r, c| if r == c { T::one() } else { T::zero() })
     }
 }
@@ -408,7 +591,10 @@ where
     T: Zero,
 {
     /// Returns a matrix expression filled with zeros.
-    pub fn zeros(num_rows: usize, num_cols: usize) -> ExprWrapper<impl MatrixExpr<Entry = T>> {
+    pub fn zeros(
+        num_rows: usize,
+        num_cols: usize,
+    ) -> MatrixExprWrapper<impl MatrixExpr<Entry = T>> {
         make_matrix_expr(num_rows, num_cols, |_, _| T::zero())
     }
 }
@@ -426,7 +612,7 @@ where
     T: One,
 {
     /// Returns a matrix expression filled with ones.
-    pub fn ones(num_rows: usize, num_cols: usize) -> ExprWrapper<impl MatrixExpr<Entry = T>> {
+    pub fn ones(num_rows: usize, num_cols: usize) -> MatrixExprWrapper<impl MatrixExpr<Entry = T>> {
         make_matrix_expr(num_rows, num_cols, |_, _| T::one())
     }
 }
@@ -448,7 +634,7 @@ where
         num_rows: usize,
         num_cols: usize,
         val: T,
-    ) -> ExprWrapper<impl MatrixExpr<Entry = T>> {
+    ) -> MatrixExprWrapper<impl MatrixExpr<Entry = T>> {
         make_matrix_expr(num_rows, num_cols, move |_, _| val.clone())
     }
 }
@@ -500,10 +686,10 @@ fn test_index_mut_dmatrix() {
 impl<T, Rhs> Add<Rhs> for &DMatrix<T>
 where
     Rhs: MatrixExpr,
-    ExprWrapper<Self>: Add<Rhs>,
+    MatrixExprWrapper<Self>: Add<Rhs>,
     T: Clone,
 {
-    type Output = <ExprWrapper<Self> as Add<Rhs>>::Output;
+    type Output = <MatrixExprWrapper<Self> as Add<Rhs>>::Output;
 
     fn add(self, rhs: Rhs) -> Self::Output {
         self.wrap() + rhs
@@ -544,9 +730,9 @@ fn test_add_assign_dmatrix() {
 impl<T, Rhs> Sub<Rhs> for &DMatrix<T>
 where
     T: Clone,
-    ExprWrapper<Self>: Sub<Rhs>,
+    MatrixExprWrapper<Self>: Sub<Rhs>,
 {
-    type Output = <ExprWrapper<Self> as Sub<Rhs>>::Output;
+    type Output = <MatrixExprWrapper<Self> as Sub<Rhs>>::Output;
 
     fn sub(self, rhs: Rhs) -> Self::Output {
         self.wrap() - rhs
@@ -657,7 +843,7 @@ impl<T> DMatrix<T> {
     pub fn mul_elemwise<'a, Lhs: MatrixExpr>(
         &'a self,
         lhs: Lhs,
-    ) -> ExprWrapper<impl MatrixExpr<Entry = T::Output> + 'a>
+    ) -> MatrixExprWrapper<impl MatrixExpr<Entry = T::Output> + 'a>
     where
         T: Mul<Lhs::Entry> + Clone,
         Lhs: 'a,
@@ -681,7 +867,7 @@ impl<T> DMatrix<T> {
     pub fn div_elemwise<'a, Lhs: MatrixExpr>(
         &'a self,
         lhs: Lhs,
-    ) -> ExprWrapper<impl MatrixExpr<Entry = T::Output> + 'a>
+    ) -> MatrixExprWrapper<impl MatrixExpr<Entry = T::Output> + 'a>
     where
         T: Div<Lhs::Entry> + Clone,
         Lhs: 'a,
@@ -696,7 +882,7 @@ where
 {
     /// Returns the transposed matrix as a matrix expression.
     #[allow(clippy::needless_lifetimes)] // false positive
-    pub fn t<'a>(&'a self) -> ExprWrapper<impl MatrixExpr<Entry = T> + 'a> {
+    pub fn t<'a>(&'a self) -> MatrixExprWrapper<impl MatrixExpr<Entry = T> + 'a> {
         self.wrap().t()
     }
 }
@@ -714,7 +900,7 @@ where
 {
     /// Returns the transposed matrix as a matrix expression.
     #[allow(clippy::needless_lifetimes)] // false positive
-    pub fn h<'a>(&'a self) -> ExprWrapper<impl MatrixExpr<Entry = T> + 'a> {
+    pub fn h<'a>(&'a self) -> MatrixExprWrapper<impl MatrixExpr<Entry = T> + 'a> {
         self.wrap().h()
     }
 }
@@ -736,6 +922,27 @@ fn test_dmatrix_conjugate_transpose() {
     ]
     .eval();
     assert_eq!(a, b);
+}
+
+impl<T> DMatrix<T>
+where
+    T: Clone,
+{
+    /// Returns the vector expression consisting of the diagonal elements of
+    /// the matrix.
+    ///
+    /// # Example
+    /// ```
+    /// # use magnesia::linalg::MatrixExpr;
+    /// # use magnesia::linalg::VectorExpr;
+    /// let v = [[1, 2, 3],
+    ///          [4, 5, 6]].eval().diag().eval();
+    /// assert_eq!([1, 5].eval(), v);
+    /// ```
+    #[allow(clippy::needless_lifetimes)] // False positive warning
+    pub fn diag<'a>(&'a self) -> VectorExprWrapper<impl VectorExpr<Entry = T> + 'a> {
+        self.wrap().diag()
+    }
 }
 
 impl<T: Clone, const NUM_ROWS: usize, const NUM_COLS: usize> MatrixExpr
