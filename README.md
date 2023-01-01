@@ -21,13 +21,13 @@
 
 # Magnesia
 
-A math library for Rust featuring
+A numerical math library for Rust featuring
 
 * Polynomials
 * Vectors and Matrices
 * Complex Numbers
 
-The goal of Magnesia is to provide an easy to use yet efficient API for mathematical applications. Magnesia may not be feature rich and optimized yet, but its interfaces are designed such that extensions and zero overhead implementations are possible.
+The goal of Magnesia is to provide an easy to use yet efficient API for mathematical applications. Magnesia's interfaces are designed such that extensions and zero overhead implementations are possible. Dependencies from other crates are kept to a minimum. Currently, there are no build dependencies.
 
 ## Usage
 
@@ -43,7 +43,7 @@ Please find the reference documentation [here on docs.rs](https://docs.rs/magnes
 
 ## Contributing
 
-Contributions are highly welcome. To do so, please send me a pull request via github. It doesn't have to be perfect at first, but expect feedback and change requests before merges into the main repository.
+Contributions are highly welcome. In fact, I would be happy to have a sparring partner for development. To contribute, please send me a pull request via github. It doesn't have to be perfect at first, but expect feedback before merges into the main repository.
 
 ## Bug Reports and Feature Requests
 
