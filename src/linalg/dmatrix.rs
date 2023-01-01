@@ -143,48 +143,6 @@ fn test_zip_matrix_expr() {
     assert_eq!(a, b);
 }
 
-impl<Lhs: MatrixExpr> ExprWrapper<Lhs> {
-    pub fn mul_elemwise<Rhs: MatrixExpr>(
-        self,
-        rhs: Rhs,
-    ) -> ExprWrapper<impl MatrixExpr<Entry = <Lhs::Entry as Mul<Rhs::Entry>>::Output>>
-    where
-        Lhs::Entry: Mul<Rhs::Entry>,
-    {
-        self.zip(rhs).map(|(lhs, rhs)| lhs * rhs)
-    }
-}
-
-#[test]
-fn test_mul_elemwise_matrix_expr() {
-    let a = [[1, 2, 3], [4, 5, 6]].wrap();
-    let b = [[0, 1, 2], [3, 4, 5]].wrap();
-    let c = a.mul_elemwise(b).eval();
-    let d = [[0, 2, 6], [12, 20, 30]].eval();
-    assert_eq!(c, d);
-}
-
-impl<Lhs: MatrixExpr> ExprWrapper<Lhs> {
-    pub fn div_elemwise<Rhs: MatrixExpr>(
-        self,
-        rhs: Rhs,
-    ) -> ExprWrapper<impl MatrixExpr<Entry = <Lhs::Entry as Div<Rhs::Entry>>::Output>>
-    where
-        Lhs::Entry: Div<Rhs::Entry>,
-    {
-        self.zip(rhs).map(|(lhs, rhs)| lhs / rhs)
-    }
-}
-
-#[test]
-fn test_div_elemwise_matrix_expr() {
-    let a = [[0, 2, 6], [12, 20, 30]].wrap();
-    let b = [[1, 2, 3], [4, 5, 6]].wrap();
-    let c = a.div_elemwise(b).eval();
-    let d = [[0, 1, 2], [3, 4, 5]].eval();
-    assert_eq!(c, d);
-}
-
 impl<Rhs, Lhs> Add<Rhs> for ExprWrapper<Lhs>
 where
     Lhs: MatrixExpr,
@@ -277,6 +235,48 @@ where
     fn num_cols(&self) -> usize {
         self.0.num_cols()
     }
+}
+
+impl<Lhs: MatrixExpr> ExprWrapper<Lhs> {
+    pub fn mul_elemwise<Rhs: MatrixExpr>(
+        self,
+        rhs: Rhs,
+    ) -> ExprWrapper<impl MatrixExpr<Entry = <Lhs::Entry as Mul<Rhs::Entry>>::Output>>
+    where
+        Lhs::Entry: Mul<Rhs::Entry>,
+    {
+        self.zip(rhs).map(|(lhs, rhs)| lhs * rhs)
+    }
+}
+
+#[test]
+fn test_mul_elemwise_matrix_expr() {
+    let a = [[1, 2, 3], [4, 5, 6]].wrap();
+    let b = [[0, 1, 2], [3, 4, 5]].wrap();
+    let c = a.mul_elemwise(b).eval();
+    let d = [[0, 2, 6], [12, 20, 30]].eval();
+    assert_eq!(c, d);
+}
+
+impl<Lhs: MatrixExpr> ExprWrapper<Lhs> {
+    pub fn div_elemwise<Rhs: MatrixExpr>(
+        self,
+        rhs: Rhs,
+    ) -> ExprWrapper<impl MatrixExpr<Entry = <Lhs::Entry as Div<Rhs::Entry>>::Output>>
+    where
+        Lhs::Entry: Div<Rhs::Entry>,
+    {
+        self.zip(rhs).map(|(lhs, rhs)| lhs / rhs)
+    }
+}
+
+#[test]
+fn test_div_elemwise_matrix_expr() {
+    let a = [[0, 2, 6], [12, 20, 30]].wrap();
+    let b = [[1, 2, 3], [4, 5, 6]].wrap();
+    let c = a.div_elemwise(b).eval();
+    let d = [[0, 1, 2], [3, 4, 5]].eval();
+    assert_eq!(c, d);
 }
 
 impl<Expr> ExprWrapper<Expr>
@@ -421,14 +421,6 @@ fn test_dmatrix_zeros() {
     );
 }
 
-impl<T> Index<[usize; 2]> for DMatrix<T> {
-    type Output = T;
-
-    fn index(&self, row_and_col: [usize; 2]) -> &Self::Output {
-        &self.data[row_and_col[0] * self.num_cols + row_and_col[1]]
-    }
-}
-
 impl<T> DMatrix<T>
 where
     T: One,
@@ -467,6 +459,14 @@ fn test_dmatrix_same() {
         DMatrix::<i32>::same(2, 3, 42).eval(),
         [[42, 42, 42], [42, 42, 42]].eval()
     );
+}
+
+impl<T> Index<[usize; 2]> for DMatrix<T> {
+    type Output = T;
+
+    fn index(&self, row_and_col: [usize; 2]) -> &Self::Output {
+        &self.data[row_and_col[0] * self.num_cols + row_and_col[1]]
+    }
 }
 
 #[test]
