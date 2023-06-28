@@ -3,7 +3,7 @@ use std::ops::{Add, AddAssign, Mul, MulAssign, Sub, SubAssign};
 
 /// Statically sized mathematical vector.
 #[derive(Debug, PartialEq, Clone, Copy, Eq)]
-pub struct SVector<T, const DIM: usize>([T; DIM]);
+pub struct SVector<T, const DIM: usize>(pub [T; DIM]);
 
 impl<T: Zero, const DIM: usize> Zero for SVector<T, DIM> {
     /// Initializes a zero vector.
