@@ -1,5 +1,5 @@
 use crate::algebra::{MulRefs, Zero};
-use std::ops::{Add, AddAssign, Mul, MulAssign, Sub, SubAssign};
+use std::ops::{Add, AddAssign, Index, IndexMut, Mul, MulAssign, Sub, SubAssign};
 
 /// Statically sized mathematical vector.
 #[derive(Debug, PartialEq, Clone, Copy, Eq)]
@@ -354,4 +354,33 @@ impl<'a, T, const DIM: usize> IntoIterator for &'a mut SVector<T, DIM> {
     fn into_iter(self) -> Self::IntoIter {
         self.0.iter_mut()
     }
+}
+
+impl<T, const DIM: usize> Index<usize> for SVector<T, DIM> {
+    type Output = T;
+
+    fn index(&self, index: usize) -> &Self::Output {
+        &self.0[index]
+    }
+}
+
+#[test]
+fn test_svector_index() {
+    let v: SVector<f32, 2> = [42.0, 43.0].into();
+    assert_eq!(v[0], 42.0);
+    assert_eq!(v[1], 43.0);
+}
+
+impl<T, const DIM: usize> IndexMut<usize> for SVector<T, DIM> {
+    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
+        &mut self.0[index]
+    }
+}
+
+#[test]
+fn test_svector_index_mut() {
+    let mut v: SVector<f32, 2> = [0.0, 0.0].into();
+    v[0] = 42.0;
+    v[1] = 43.0;
+    assert_eq!(v, [42.0, 43.0].into());
 }
