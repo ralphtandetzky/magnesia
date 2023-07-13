@@ -64,3 +64,6 @@ pub mod functions;
 ///   * Affine Transformations
 ///   * Tensors
 pub mod linalg;
+
+/// This module provides different local and global numerical optimizers.
+pub mod optimize;
