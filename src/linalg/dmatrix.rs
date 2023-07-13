@@ -550,15 +550,15 @@ where
     type Entry = T;
 
     fn entry(&self, row: usize, col: usize) -> Self::Entry {
-        (*self).data[row * (*self).num_cols + col].clone()
+        self.data[row * self.num_cols + col].clone()
     }
 
     fn num_rows(&self) -> usize {
-        (*self).num_rows
+        self.num_rows
     }
 
     fn num_cols(&self) -> usize {
-        (*self).num_cols
+        self.num_cols
     }
 
     fn eval(self) -> DMatrix<Self::Entry> {

@@ -453,11 +453,11 @@ impl<T: Clone> VectorExpr for &DVector<T> {
     type Entry = T;
 
     fn entry(&self, index: usize) -> Self::Entry {
-        (*self).0[index].clone()
+        self.0[index].clone()
     }
 
     fn len(&self) -> usize {
-        (*self).0.len()
+        self.0.len()
     }
 
     fn eval(self) -> DVector<Self::Entry> {
@@ -660,6 +660,7 @@ where
 }
 
 #[test]
+#[allow(clippy::identity_op)]
 fn test_dvector_mul() {
     let u = [1, 2, 3].eval();
     let v = [2, 3, 4].eval();
@@ -682,6 +683,7 @@ where
 }
 
 #[test]
+#[allow(clippy::identity_op)]
 fn test_ref_dvector_mul() {
     let u = [1, 2, 3].eval();
     let v = [2, 3, 4].eval();

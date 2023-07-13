@@ -379,6 +379,7 @@ where
 }
 
 #[test]
+#[allow(clippy::op_ref)]
 fn test_div_ref_complex_f32_ref_f32() {
     let a = Complex::new(3f32, 5f32);
     let b = 4f32;
@@ -398,6 +399,7 @@ where
 }
 
 #[test]
+#[allow(clippy::op_ref)]
 fn test_div_complex_f32_ref_f32() {
     let a = Complex::new(3f32, 5f32);
     let b = 4f32;
