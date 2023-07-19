@@ -31,9 +31,9 @@ pub trait VectorExpr: Sized {
     }
 }
 
-/// A wrapper type for matrix expressions.
+/// A wrapper type for vector expressions.
 ///
-/// This `struct` wraps anything that implements the trait [`MatrixExpr`]
+/// This `struct` wraps anything that implements the trait [`VectorExpr`]
 /// and forwards any function calls.
 /// Additionally, it implements a large number of functions and operators and
 /// thus extends the interface of the wrapped object.
