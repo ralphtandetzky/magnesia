@@ -30,7 +30,7 @@ pub fn optimize<T, const N: usize>(
     differential_weight: T,
     num_iters: usize,
     rng: &mut impl rand::Rng,
-    compare_candidates: impl Fn(&[T; N], &[T; N]) -> bool,
+    mut compare_candidates: impl FnMut(&[T; N], &[T; N]) -> bool,
 ) -> [T; N]
 where
     T: PartialOrd
