@@ -289,7 +289,7 @@ impl<T: Ring> MulAssign for Complex<T> {
 }
 
 #[test]
-fn test_mul_assign_for_comples_ints() {
+fn test_mul_assign_for_complex_ints() {
     let mut a = Complex::new(1, 2);
     a *= a;
     assert_eq!(a, Complex::new(-3, 4));

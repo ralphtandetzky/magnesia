@@ -56,7 +56,7 @@ where
         "Invalid differential weight"
     );
 
-    // Create initial candidatre set
+    // Create initial candidate set
     let mut population = (0..population_size)
         .map(|_| from_fn(|i| rng.gen_range(bounds[i].0..bounds[i].1)))
         .collect::<Box<[[T; N]]>>();
@@ -99,7 +99,7 @@ where
             }
         });
 
-        // If the candidate is bettern than population[i], replace
+        // If the candidate is better than population[i], replace
         if compare_candidates(&x, &population[i]) {
             population[i] = x;
         }
